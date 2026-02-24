@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="dark">
+<html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +7,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Inter+Display:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <style>
-  /* ========== TOKENS ========== */
-  :root[data-theme="dark"] {
+  /* ========== TOKENS — Dark (default) ========== */
+  :root {
     --surface-primary:   #0F0F0F;
     --surface-secondary: #16171B;
     --surface-tertiary:  #282930;
@@ -23,23 +23,28 @@
     --accent-dim:        rgba(56,217,163,0.08);
     --shadow:            rgba(0,0,0,0.45);
     --grid-line:         rgba(255,255,255,0.04);
+    color-scheme: dark;
   }
 
-  :root[data-theme="light"] {
-    --surface-primary:   #EDEBE5;
-    --surface-secondary: #F7F2EA;
-    --surface-tertiary:  #FFFEFC;
-    --btn-primary:       #039F6B;
-    --btn-hover:         #2FC493;
-    --btn-pressed:       #1C8764;
-    --border:            #DDD8CF;
-    --text-primary:      #1A1A1A;
-    --text-secondary:    #969696;
-    --text-muted:        #AAAAAA;
-    --accent:            #039F6B;
-    --accent-dim:        rgba(3,159,107,0.08);
-    --shadow:            rgba(0,0,0,0.07);
-    --grid-line:         rgba(0,0,0,0.05);
+  /* ========== TOKENS — Light (system preference) ========== */
+  @media (prefers-color-scheme: light) {
+    :root {
+      --surface-primary:   #EDEBE5;
+      --surface-secondary: #F7F2EA;
+      --surface-tertiary:  #FFFEFC;
+      --btn-primary:       #039F6B;
+      --btn-hover:         #2FC493;
+      --btn-pressed:       #1C8764;
+      --border:            #DDD8CF;
+      --text-primary:      #1A1A1A;
+      --text-secondary:    #969696;
+      --text-muted:        #AAAAAA;
+      --accent:            #039F6B;
+      --accent-dim:        rgba(3,159,107,0.08);
+      --shadow:            rgba(0,0,0,0.07);
+      --grid-line:         rgba(0,0,0,0.05);
+      color-scheme: light;
+    }
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -53,30 +58,6 @@
     min-height: 100vh;
     transition: background 0.2s, color 0.2s;
   }
-
-  /* ========== THEME TOGGLE ========== */
-  .theme-toggle {
-    position: fixed;
-    top: 18px;
-    right: 18px;
-    z-index: 200;
-    background: var(--surface-secondary);
-    border: 1px solid var(--border);
-    border-radius: 100px;
-    padding: 6px 13px 6px 10px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    font-family: 'Inter Display', 'Inter', sans-serif;
-    transition: all 0.15s;
-    box-shadow: 0 2px 10px var(--shadow);
-  }
-  .theme-toggle:hover { color: var(--text-primary); border-color: var(--accent); }
-  .theme-icon { font-size: 13px; }
 
   /* ========== LAYOUT ========== */
   .main {
@@ -256,7 +237,7 @@
   /* ========== INSIGHT CARDS ========== */
   .insight-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 14px;
   }
 
@@ -296,7 +277,7 @@
   .insight-sub { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
 
   /* ========== SUMMARY CARDS ========== */
-  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
 
   .summary-card {
     background: var(--surface-secondary);
@@ -382,17 +363,11 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-  /* ========== FOOTER ========== */
-  footer { border-top: 1px solid var(--border); padding: 22px 28px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: 11px; }
-  footer a { color: var(--text-muted); text-decoration: none; transition: color 0.13s; }
-  footer a:hover { color: var(--accent); }
-
   /* ========== RESPONSIVE ========== */
   @media (max-width: 900px) {
     .main { grid-template-columns: 1fr; padding: 20px 14px 60px; }
     .params-panel { position: static; top: auto; }
     .summary-grid, .insight-grid { grid-template-columns: 1fr 1fr; }
-    footer { padding: 16px 14px; flex-direction: column; gap: 6px; text-align: center; }
   }
   @media (max-width: 540px) {
     .summary-grid, .insight-grid { grid-template-columns: 1fr; }
@@ -400,11 +375,6 @@
 </style>
 </head>
 <body>
-
-<button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
-  <span class="theme-icon" id="themeIcon">☀️</span>
-  <span id="themeLabel">Light Mode</span>
-</button>
 
 <div class="main">
 
@@ -534,15 +504,13 @@
     <div class="insight-grid">
       <div class="insight-card accent-card">
         <span class="insight-icon">⚖️</span>
-        <div class="insight-label">Break-even FLV vs. Thesaurierend</div>
+        <div class="insight-label">Break-even FLV vs. Depot</div>
         <div class="insight-value accent" id="breakeven-thes">—</div>
-        <div class="insight-sub" id="breakeven-thes-sub">Ab diesem Jahr überholt die FLV das Depot</div>
-      </div>
-      <div class="insight-card accent-card">
-        <span class="insight-icon">⚖️</span>
-        <div class="insight-label">Break-even FLV vs. Ausschüttend</div>
-        <div class="insight-value accent" id="breakeven-ausch">—</div>
-        <div class="insight-sub" id="breakeven-ausch-sub">Ab diesem Jahr überholt die FLV das Depot</div>
+        <div class="insight-sub" id="breakeven-thes-sub" style="margin-bottom:10px"></div>
+        <div style="height:1px;background:var(--border);margin:10px 0"></div>
+        <div class="insight-label" style="margin-bottom:5px">vs. Ausschüttend</div>
+        <div class="insight-value accent" id="breakeven-ausch" style="font-size:18px;margin-bottom:4px">—</div>
+        <div class="insight-sub" id="breakeven-ausch-sub"></div>
       </div>
       <div class="insight-card">
         <span class="insight-icon">📊</span>
@@ -562,11 +530,6 @@
       <div class="summary-card">
         <div class="summary-label">Depot Thesaurierend</div>
         <div class="summary-value td-blue" id="sum-thes">—</div>
-        <div class="summary-sub">nach KESt bei Verkauf</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">Depot Ausschüttend</div>
-        <div class="summary-value td-orange" id="sum-ausch">—</div>
         <div class="summary-sub">nach KESt bei Verkauf</div>
       </div>
     </div>
@@ -608,24 +571,7 @@
   </div>
 </div>
 
-<footer>
-  <span>© 2026 Jason Schreiber · Vermögensberatung &amp; Versicherungen Wien</span>
-  <span>Alle Angaben ohne Gewähr · Kein Anlageberatungsersatz · <a href="https://jasonschreiber.at">jasonschreiber.at</a></span>
-</footer>
-
 <script>
-// ========================
-// THEME
-// ========================
-function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.getAttribute('data-theme') === 'dark';
-  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-  document.getElementById('themeIcon').textContent  = isDark ? '🌙' : '☀️';
-  document.getElementById('themeLabel').textContent = isDark ? 'Dark Mode' : 'Light Mode';
-  if (lastData) renderChart(lastData);
-}
-
 // ========================
 // COLLAPSIBLE
 // ========================
@@ -710,7 +656,7 @@ function buildLegend() {
 buildLegend();
 
 function getTC() {
-  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   return {
     grid:   dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)',
     ticks:  dark ? '#555860' : '#AAAAAA',
@@ -915,10 +861,9 @@ function renderSummary(data) {
   const last = data[data.length - 1];
   document.getElementById('sum-flv').textContent   = formatEur(last.FLV_Netto);
   document.getElementById('sum-thes').textContent  = formatEur(last.Depot_Thesaurierend_Netto);
-  document.getElementById('sum-ausch').textContent = formatEur(last.Depot_Ausschuettend_Netto);
   document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('highlight'));
-  const vals = [last.FLV_Netto, last.Depot_Thesaurierend_Netto, last.Depot_Ausschuettend_Netto];
-  document.querySelectorAll('.summary-card')[vals.indexOf(Math.max(...vals))].classList.add('highlight');
+  const idx = last.FLV_Netto >= last.Depot_Thesaurierend_Netto ? 0 : 1;
+  document.querySelectorAll('.summary-card')[idx].classList.add('highlight');
 }
 
 function renderInsights(data) {
@@ -931,10 +876,10 @@ function renderInsights(data) {
   }
   if (beThes !== null) {
     document.getElementById('breakeven-thes').textContent = 'Jahr ' + beThes;
-    document.getElementById('breakeven-thes-sub').textContent = `Ab Jahr ${beThes} liegt die FLV vorne`;
+    document.getElementById('breakeven-thes-sub').textContent = `FLV überholt Thesaurierend ab Jahr ${beThes}`;
   } else {
     document.getElementById('breakeven-thes').textContent = 'Nie';
-    document.getElementById('breakeven-thes-sub').textContent = 'FLV überholt das Depot in dieser Laufzeit nicht';
+    document.getElementById('breakeven-thes-sub').textContent = 'FLV überholt Thesaurierend nicht innerhalb der Laufzeit';
   }
 
   // Break-even vs Ausschüttend
@@ -944,10 +889,10 @@ function renderInsights(data) {
   }
   if (beAusch !== null) {
     document.getElementById('breakeven-ausch').textContent = 'Jahr ' + beAusch;
-    document.getElementById('breakeven-ausch-sub').textContent = `Ab Jahr ${beAusch} liegt die FLV vorne`;
+    document.getElementById('breakeven-ausch-sub').textContent = `FLV überholt Ausschüttend ab Jahr ${beAusch}`;
   } else {
     document.getElementById('breakeven-ausch').textContent = 'Nie';
-    document.getElementById('breakeven-ausch-sub').textContent = 'FLV überholt das Depot in dieser Laufzeit nicht';
+    document.getElementById('breakeven-ausch-sub').textContent = 'FLV überholt Ausschüttend nicht innerhalb der Laufzeit';
   }
 
   // Delta FLV vs best depot
