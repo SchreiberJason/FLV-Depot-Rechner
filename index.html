@@ -6,15 +6,21 @@
     <title>Investment-Rechner | jasonschreiber.at</title>
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React & Babel für In-Browser JSX (einfachste Lösung für GitHub Pages) -->
+    
+    <!-- React & Peer Dependencies -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    
+    <!-- Babel für In-Browser JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Recharts (Visualisierung) -->
-    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+    
+    <!-- Recharts (Stabile Version 2.x) -->
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+    
     <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/lucide-react@latest"></script>
+    <script src="https://unpkg.com/lucide@0.344.0"></script>
+    <script src="https://unpkg.com/lucide-react@0.344.0"></script>
 
     <style>
         body { background-color: #f8fafc; }
@@ -29,6 +35,13 @@
             border: 2px solid white;
             box-shadow: 0 0 2px rgba(0,0,0,0.2);
         }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
     </style>
 </head>
 <body>
@@ -39,9 +52,11 @@
         const { 
             ResponsiveContainer, ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend 
         } = Recharts;
+        
+        // In der UMD-Version von lucide-react heißt die globale Variable LucideReact
         const { 
             Info, Euro, TrendingUp, ShieldCheck, Wallet, ChevronDown, ChevronUp, Settings2, Eye, EyeOff, BarChart3, Clock 
-        } = lucideReact;
+        } = LucideReact;
 
         const App = () => {
             // --- PARAMETER AUS PYTHON SKRIPT ---
@@ -137,9 +152,12 @@
                     const th_e = k_t_brutto * (depotDiv/100);
                     k_t_brutto -= th_e * (depotAge/100) * (depotKest/100);
                     b_t += (th_e * (depotAge/100));
-                    k_a_brutto -= (k_a_brutto * (depotDiv/100)) * (depotKest/100);
-                    b_a += (k_a_brutto * (depotDiv/100)) * (1 - (depotKest/100));
-
+                    
+                    // Korrektur für Depot Ausschüttend
+                    const div_amount = k_a_brutto * (depotDiv/100);
+                    const div_net = div_amount * (1 - (depotKest/100));
+                    k_a_brutto = k_a_brutto - div_amount + div_net; // Reinvestition
+                    
                     const flv_n = k_flv_m + k_flv_ez_jahr;
                     const d_t_n = k_t_brutto - (Math.max(0, k_t_brutto - b_t) * (depotKest/100));
                     const eingez_g = (monatsbeitrag * monate_bisher) + kum_ez;
@@ -155,7 +173,7 @@
             const latest = data[data.length - 1];
 
             return (
-                <div className="min-h-screen p-4 md:p-8">
+                <div className="min-h-screen p-4 md:p-8 text-slate-900">
                     <div className="max-w-7xl mx-auto space-y-8">
                         <header className="text-center space-y-3">
                             <h1 className="text-4xl font-black text-slate-900">Versicherung vs. Depot</h1>
@@ -165,29 +183,33 @@
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                             <aside className="lg:col-span-4 space-y-6">
                                 <div className="bg-white p-7 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-6">
-                                    <h3 className="font-black text-sm uppercase tracking-widest flex items-center gap-2"><BarChart3 size={18} /> Parameter</h3>
+                                    <h3 className="font-black text-sm uppercase tracking-widest flex items-center gap-2 text-slate-800"><BarChart3 size={18} /> Parameter</h3>
                                     <div className="space-y-6">
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black text-slate-400 uppercase">Sparrate / Monat</label>
-                                            <input type="number" value={monatsbeitrag} onChange={e => setMonatsbeitrag(Number(e.target.value))} className="w-full p-3 bg-slate-50 rounded-2xl border border-slate-100 font-bold" />
+                                            <input type="number" value={monatsbeitrag} onChange={e => setMonatsbeitrag(Number(e.target.value))} className="w-full p-3 bg-slate-50 rounded-2xl border border-slate-100 font-bold outline-none focus:ring-2 ring-blue-500/20 transition-all" />
                                         </div>
                                         <div className="space-y-2">
-                                            <div className="flex justify-between"><label className="text-[10px] font-black text-slate-400 uppercase">Laufzeit</label><span className="text-sm font-black">{laufzeit} J.</span></div>
+                                            <div className="flex justify-between"><label className="text-[10px] font-black text-slate-400 uppercase">Laufzeit</label><span className="text-sm font-black text-blue-600">{laufzeit} J.</span></div>
                                             <input type="range" min="1" max="60" value={laufzeit} onChange={e => setLaufzeit(Number(e.target.value))} className="w-full accent-blue-600" />
                                         </div>
                                         <div className="space-y-2">
-                                            <div className="flex justify-between"><label className="text-[10px] font-black text-slate-400 uppercase">Rendite</label><span className="text-sm font-black">{rendite}%</span></div>
+                                            <div className="flex justify-between"><label className="text-[10px] font-black text-slate-400 uppercase">Rendite</label><span className="text-sm font-black text-blue-600">{rendite}%</span></div>
                                             <input type="range" min="0" max="15" step="0.1" value={rendite} onChange={e => setRendite(Number(e.target.value))} className="w-full accent-blue-600" />
                                         </div>
                                     </div>
                                     
-                                    <button onClick={() => setShowExpert(!showExpert)} className="w-full flex justify-between items-center text-[10px] font-black text-blue-600 border-t pt-4 uppercase">
+                                    <button onClick={() => setShowExpert(!showExpert)} className="w-full flex justify-between items-center text-[10px] font-black text-blue-600 border-t pt-4 uppercase transition-colors hover:text-blue-700">
                                         Expert Modus {showExpert ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
                                     </button>
                                     {showExpert && (
-                                        <div className="grid grid-cols-2 gap-2 pt-2 animate-fadeIn">
-                                            <label className="text-[9px] font-bold">Depot KeSt (%) <input type="number" value={depotKest} onChange={e => setDepotKest(Number(e.target.value))} className="w-full p-2 bg-slate-50 border rounded-lg"/></label>
-                                            <label className="text-[9px] font-bold">Depot Agio (%) <input type="number" value={depotAgio} onChange={e => setDepotAgio(Number(e.target.value))} className="w-full p-2 bg-slate-50 border rounded-lg"/></label>
+                                        <div className="grid grid-cols-2 gap-3 pt-2 animate-fadeIn">
+                                            <label className="text-[9px] font-bold text-slate-400 uppercase">KeSt (%) 
+                                                <input type="number" value={depotKest} onChange={e => setDepotKest(Number(e.target.value))} className="w-full p-2 bg-slate-50 border rounded-lg text-slate-700 font-bold mt-1 outline-none"/>
+                                            </label>
+                                            <label className="text-[9px] font-bold text-slate-400 uppercase">Agio (%) 
+                                                <input type="number" value={depotAgio} onChange={e => setDepotAgio(Number(e.target.value))} className="w-full p-2 bg-slate-50 border rounded-lg text-slate-700 font-bold mt-1 outline-none"/>
+                                            </label>
                                         </div>
                                     )}
                                 </div>
@@ -197,43 +219,52 @@
                                         <p className="text-[10px] font-black text-slate-400 uppercase mb-2 flex items-center gap-2"><Clock size={14}/> Break-Even</p>
                                         <div className="flex justify-between text-sm font-bold"><span>vs. Depot:</span><span className="text-blue-600">Jahr {breakEvenDepotYear || 'N/A'}</span></div>
                                     </div>
-                                    <div className="bg-slate-900 p-7 rounded-[2rem] text-white">
-                                        <p className="text-[10px] font-black uppercase opacity-60 mb-2">Netto Vorteil</p>
+                                    <div className="bg-slate-900 p-7 rounded-[2rem] text-white shadow-xl shadow-blue-900/10">
+                                        <p className="text-[10px] font-black uppercase opacity-60 mb-2 tracking-widest">Netto Vorteil</p>
                                         <p className="text-3xl font-black">{Math.abs(latest.flv - latest.depot_t).toLocaleString('de-DE')} €</p>
-                                        <p className="text-[10px] mt-2 opacity-50 uppercase">Durch {latest.flv > latest.depot_t ? 'Versicherung' : 'Depot'}</p>
+                                        <p className="text-[10px] mt-2 opacity-50 uppercase font-bold">Durch {latest.flv > latest.depot_t ? 'Versicherung' : 'Depot'}</p>
                                     </div>
                                 </div>
                             </aside>
 
                             <main className="lg:col-span-8 space-y-6">
-                                <div className="bg-white p-8 rounded-[3rem] shadow-xl border border-slate-100">
+                                <div className="bg-white p-6 md:p-8 rounded-[3rem] shadow-xl border border-slate-100 overflow-hidden">
                                     <div className="h-[450px]">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <ComposedChart data={data}>
                                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                                <XAxis dataKey="jahr" axisLine={false} tickLine={false} tick={{fontSize: 11, fontWeight: 900, fill: '#cbd5e1'}} />
+                                                <XAxis dataKey="jahr" axisLine={false} tickLine={false} tick={{fontSize: 11, fontWeight: 900, fill: '#cbd5e1'}} dy={10} />
                                                 <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11, fontWeight: 900, fill: '#cbd5e1'}} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
-                                                <Tooltip contentStyle={{borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)'}} />
-                                                <Area type="monotone" dataKey="flv" name="Versicherung" stroke="#10b981" strokeWidth={4} fill="#10b98122" />
-                                                <Area type="monotone" dataKey="depot_t" name="Depot" stroke="#3b82f6" strokeWidth={4} fill="#3b82f622" />
-                                                <Line type="monotone" dataKey="eingezahlt" name="Einzahlung" stroke="#1e293b" strokeDasharray="5 5" dot={false} />
+                                                <Tooltip 
+                                                    contentStyle={{borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontWeight: '800', fontSize: '12px'}} 
+                                                    formatter={(v) => [`${v.toLocaleString('de-DE')} €`]}
+                                                />
+                                                <Legend verticalAlign="top" height={36} iconType="circle" />
+                                                <Area type="monotone" dataKey="flv" name="Versicherung" stroke="#10b981" strokeWidth={4} fill="#10b98122" animationDuration={1000} />
+                                                <Area type="monotone" dataKey="depot_t" name="Depot" stroke="#3b82f6" strokeWidth={4} fill="#3b82f622" animationDuration={1000} />
+                                                <Line type="monotone" dataKey="eingezahlt" name="Einzahlung" stroke="#1e293b" strokeDasharray="5 5" dot={false} strokeWidth={2} />
                                             </ComposedChart>
                                         </ResponsiveContainer>
                                     </div>
                                 </div>
                                 
-                                <div className="bg-white rounded-[2rem] border overflow-hidden">
-                                    <table className="w-full text-left text-sm">
-                                        <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400">
-                                            <tr><th className="px-6 py-4">Jahr</th><th className="px-6 py-4">Einzahlung</th><th className="px-6 py-4 text-emerald-600">FLV</th><th className="px-6 py-4 text-blue-600">Depot</th></tr>
+                                <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                                    <table className="w-full text-left text-sm border-collapse">
+                                        <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100">
+                                            <tr>
+                                                <th className="px-8 py-5">Jahr</th>
+                                                <th className="px-8 py-5">Einzahlung</th>
+                                                <th className="px-8 py-5 text-emerald-600">FLV (Netto)</th>
+                                                <th className="px-8 py-5 text-blue-600">Depot (Netto)</th>
+                                            </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody className="divide-y divide-slate-50">
                                             {data.filter((_, i) => (i + 1) % 5 === 0 || i === data.length - 1).map(row => (
-                                                <tr key={row.jahr} className="border-t">
-                                                    <td className="px-6 py-4 font-black">{row.jahr}</td>
-                                                    <td className="px-6 py-4">{row.eingezahlt.toLocaleString('de-DE')} €</td>
-                                                    <td className="px-6 py-4 font-black text-emerald-600">{row.flv.toLocaleString('de-DE')} €</td>
-                                                    <td className="px-6 py-4 font-black text-blue-600">{row.depot_t.toLocaleString('de-DE')} €</td>
+                                                <tr key={row.jahr} className="hover:bg-slate-50/50 transition-colors">
+                                                    <td className="px-8 py-5 font-black text-slate-400">{row.jahr}</td>
+                                                    <td className="px-8 py-5 font-bold text-slate-600">{row.eingezahlt.toLocaleString('de-DE')} €</td>
+                                                    <td className="px-8 py-5 font-black text-emerald-600">{row.flv.toLocaleString('de-DE')} €</td>
+                                                    <td className="px-8 py-5 font-black text-blue-600">{row.depot_t.toLocaleString('de-DE')} €</td>
                                                 </tr>
                                             ))}
                                         </tbody>
