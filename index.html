@@ -1,548 +1,418 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FLV vs. Depot Vergleichsrechner | Jason Schreiber</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Inter+Display:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0a;
-    --surface: #111111;
-    --surface2: #181818;
-    --border: #242424;
-    --border-light: #2e2e2e;
-    --text: #f0ede8;
-    --text-muted: #7a7570;
-    --text-light: #b0aa9f;
-    --accent: #38D9A3;
-    --accent-dim: rgba(56,217,163,0.10);
-    --green: #4ade80;
-    --blue: #60a5fa;
-    --orange: #fb923c;
-    --gray: #6b7280;
-    --radius: 12px;
-    --radius-sm: 8px;
+  /* ========== TOKENS ========== */
+  :root[data-theme="dark"] {
+    --surface-primary:   #0F0F0F;
+    --surface-secondary: #16171B;
+    --surface-tertiary:  #282930;
+    --btn-primary:       #38D9A3;
+    --btn-hover:         #2FC493;
+    --btn-pressed:       #1C8764;
+    --border:            #212430;
+    --text-primary:      #F0EDE8;
+    --text-secondary:    #969696;
+    --text-muted:        #555860;
+    --accent:            #38D9A3;
+    --accent-dim:        rgba(56,217,163,0.08);
+    --shadow:            rgba(0,0,0,0.45);
+    --grid-line:         rgba(255,255,255,0.04);
+  }
+
+  :root[data-theme="light"] {
+    --surface-primary:   #EDEBE5;
+    --surface-secondary: #F7F2EA;
+    --surface-tertiary:  #FFFEFC;
+    --btn-primary:       #039F6B;
+    --btn-hover:         #2FC493;
+    --btn-pressed:       #1C8764;
+    --border:            #DDD8CF;
+    --text-primary:      #1A1A1A;
+    --text-secondary:    #969696;
+    --text-muted:        #AAAAAA;
+    --accent:            #039F6B;
+    --accent-dim:        rgba(3,159,107,0.08);
+    --shadow:            rgba(0,0,0,0.07);
+    --grid-line:         rgba(0,0,0,0.05);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: var(--bg);
-    color: var(--text);
+    background: var(--surface-primary);
+    color: var(--text-primary);
     font-family: 'Inter Display', 'Inter', sans-serif;
     font-size: 15px;
     line-height: 1.6;
     min-height: 100vh;
+    transition: background 0.2s, color 0.2s;
   }
 
-  /* HEADER - removed */
-
-  /* HERO */
-  .hero {
-    padding: 80px 40px 60px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .hero-label {
-    font-size: 11px;
+  /* ========== THEME TOGGLE ========== */
+  .theme-toggle {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 200;
+    background: var(--surface-secondary);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 6px 13px 6px 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
     font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 20px;
-  }
-
-  .hero h1 {
+    color: var(--text-secondary);
     font-family: 'Inter Display', 'Inter', sans-serif;
-    font-weight: 700;
-    font-size: clamp(36px, 5vw, 58px);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    color: var(--text);
-    max-width: 700px;
-    margin-bottom: 18px;
+    transition: all 0.15s;
+    box-shadow: 0 2px 10px var(--shadow);
   }
+  .theme-toggle:hover { color: var(--text-primary); border-color: var(--accent); }
+  .theme-icon { font-size: 13px; }
 
-  .hero h1 em {
-    font-style: italic;
-    color: var(--accent);
-  }
-
-  .hero p {
-    color: var(--text-light);
-    font-size: 16px;
-    max-width: 560px;
-    line-height: 1.7;
-  }
-
-  /* MAIN LAYOUT */
+  /* ========== LAYOUT ========== */
   .main {
-    max-width: 1200px;
+    max-width: 1240px;
     margin: 0 auto;
-    padding: 0 40px 80px;
+    padding: 36px 28px 80px;
     display: grid;
-    grid-template-columns: 380px 1fr;
-    gap: 32px;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
     align-items: start;
   }
 
-  /* SIDEBAR / PARAMS */
+  /* ========== PARAMS PANEL ========== */
   .params-panel {
-    background: var(--surface);
+    background: var(--surface-secondary);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 14px;
     overflow: hidden;
     position: sticky;
-    top: 24px;
+    top: 20px;
+    box-shadow: 0 4px 20px var(--shadow);
   }
 
-  /* COLLAPSIBLE */
+  .params-section {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .params-section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+
+  /* ========== COLLAPSIBLE ========== */
   .collapsible-trigger {
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
     user-select: none;
-    padding: 20px 24px;
+    padding: 16px 20px;
     border-bottom: 1px solid var(--border);
     transition: background 0.15s;
   }
-
-  .collapsible-trigger:hover { background: rgba(255,255,255,0.02); }
-
+  .collapsible-trigger:hover { background: var(--accent-dim); }
   .collapsible-trigger .section-label { margin-bottom: 0; }
 
   .collapsible-arrow {
     color: var(--text-muted);
-    font-size: 12px;
-    transition: transform 0.25s ease;
+    font-size: 9px;
+    transition: transform 0.22s ease;
     flex-shrink: 0;
   }
-
   .collapsible-trigger.open .collapsible-arrow { transform: rotate(180deg); }
 
   .collapsible-body {
     display: none;
-    padding: 20px 24px;
+    padding: 16px 20px;
     border-bottom: 1px solid var(--border);
   }
-
   .collapsible-body.open { display: block; }
 
-  .params-section {
-    padding: 24px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .params-section:last-child { border-bottom: none; }
-
-  .section-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 18px;
-  }
-
-  .field {
-    margin-bottom: 16px;
-  }
-
+  /* ========== FIELDS ========== */
+  .field { margin-bottom: 13px; }
   .field:last-child { margin-bottom: 0; }
 
   label {
     display: block;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 500;
-    color: var(--text-light);
-    margin-bottom: 7px;
-    letter-spacing: 0.01em;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
   }
 
   input[type="number"] {
     width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-sm);
-    color: var(--text);
+    background: var(--surface-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
     font-family: 'Inter Display', 'Inter', sans-serif;
     font-size: 14px;
-    padding: 10px 13px;
+    padding: 8px 11px;
     outline: none;
     transition: border-color 0.15s;
     -moz-appearance: textfield;
   }
-
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus { border-color: var(--accent); background: var(--accent-dim); }
 
-  input[type="number"]:focus {
-    border-color: var(--accent);
-    background: rgba(212,175,55,0.04);
-  }
-
-  .field-unit {
-    display: flex;
-    gap: 0;
-  }
-
-  .field-unit input {
-    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-    border-right: none;
-  }
+  .field-unit { display: flex; }
+  .field-unit input { border-radius: 8px 0 0 8px; border-right: none; }
 
   .unit-badge {
-    background: var(--border);
-    border: 1px solid var(--border-light);
+    background: var(--surface-primary);
+    border: 1px solid var(--border);
     border-left: none;
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    padding: 10px 12px;
-    font-size: 12px;
+    border-radius: 0 8px 8px 0;
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 500;
     color: var(--text-muted);
     white-space: nowrap;
     display: flex;
     align-items: center;
   }
 
-  /* EINMALZAHLUNGEN */
+  /* ========== EINMAL ========== */
   .einmal-row {
     display: grid;
     grid-template-columns: 1fr 1fr 28px;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 7px;
+    margin-bottom: 7px;
     align-items: end;
   }
 
-  .einmal-row label { margin-bottom: 5px; }
-
   .btn-remove {
     background: none;
-    border: 1px solid var(--border-light);
+    border: 1px solid var(--border);
     color: var(--text-muted);
     border-radius: 6px;
     width: 28px;
-    height: 36px;
+    height: 34px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s;
+    transition: all 0.13s;
   }
-
-  .btn-remove:hover {
-    border-color: #ef4444;
-    color: #ef4444;
-    background: rgba(239,68,68,0.08);
-  }
+  .btn-remove:hover { border-color: #f87171; color: #f87171; background: rgba(248,113,113,0.08); }
 
   .btn-add {
     background: none;
-    border: 1px dashed var(--border-light);
-    color: var(--text-muted);
-    border-radius: var(--radius-sm);
-    padding: 8px;
+    border: 1px dashed var(--border);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    padding: 7px;
     width: 100%;
     cursor: pointer;
     font-size: 12px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter Display', 'Inter', sans-serif;
     font-weight: 500;
-    letter-spacing: 0.03em;
-    transition: all 0.15s;
-    margin-top: 4px;
+    transition: all 0.13s;
+    margin-top: 3px;
   }
+  .btn-add:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 
-  .btn-add:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: var(--accent-dim);
-  }
-
-  /* CALC BUTTON */
+  /* ========== CALC BTN ========== */
   .btn-calc {
     width: 100%;
-    background: var(--accent);
-    color: #0a0a0a;
+    background: var(--btn-primary);
+    color: #051a10;
     border: none;
-    border-radius: var(--radius-sm);
-    padding: 14px;
+    border-radius: 8px;
+    padding: 12px;
     font-family: 'Inter Display', 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    transition: all 0.2s;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
     text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.13s, transform 0.1s, box-shadow 0.13s;
+  }
+  .btn-calc:hover { background: var(--btn-hover); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(56,217,163,0.22); }
+  .btn-calc:active { background: var(--btn-pressed); transform: translateY(0); box-shadow: none; }
+
+  /* ========== RESULTS ========== */
+  .results-panel { display: flex; flex-direction: column; gap: 18px; }
+
+  /* ========== INSIGHT CARDS ========== */
+  .insight-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
   }
 
-  .btn-calc:hover {
-    background: #4eeebb;
-    transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(56,217,163,0.25);
-  }
-
-  .btn-calc:active { transform: translateY(0); }
-
-  /* RIGHT PANEL */
-  .results-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  /* CHART */
-  .chart-card {
-    background: var(--surface);
+  .insight-card {
+    background: var(--surface-secondary);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 2px 10px var(--shadow);
+  }
+  .insight-card.accent-card { border-color: var(--accent); background: var(--accent-dim); }
+
+  .insight-icon { font-size: 17px; margin-bottom: 9px; display: block; }
+
+  .insight-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 7px;
+  }
+
+  .insight-value {
+    font-family: 'Inter Display', 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 7px;
+    color: var(--text-primary);
+  }
+  .insight-value.accent   { color: var(--accent); }
+  .insight-value.positive { color: #4ade80; }
+  .insight-value.negative { color: #f87171; }
+
+  .insight-sub { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* ========== SUMMARY CARDS ========== */
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+  .summary-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 2px 10px var(--shadow);
+    transition: border-color 0.2s;
+  }
+  .summary-card.highlight { border-color: var(--accent); }
+
+  .summary-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 9px; }
+
+  .summary-value { font-family: 'Inter Display', 'Inter', sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.02em; line-height: 1; margin-bottom: 6px; }
+
+  .summary-sub { font-size: 11px; color: var(--text-secondary); }
+
+  .td-green  { color: #4ade80 !important; }
+  .td-blue   { color: #60a5fa !important; }
+  .td-orange { color: #fb923c !important; }
+
+  /* ========== CHART ========== */
+  .chart-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border);
+    border-radius: 14px;
     overflow: hidden;
+    box-shadow: 0 2px 10px var(--shadow);
   }
 
   .chart-header {
-    padding: 24px 28px 20px;
+    padding: 18px 22px 14px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
   }
 
-  .chart-title {
-    font-family: 'Inter Display', 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 22px;
-    color: var(--text);
-  }
+  .chart-title { font-weight: 600; font-size: 15px; color: var(--text-primary); }
 
-  .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
+  .legend { display: flex; flex-wrap: wrap; gap: 5px; }
 
   .legend-item {
     display: flex;
     align-items: center;
-    gap: 7px;
-    padding: 5px 12px;
-    border: 1px solid var(--border-light);
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
     border-radius: 100px;
     cursor: pointer;
-    transition: all 0.15s;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
-    color: var(--text-light);
+    color: var(--text-secondary);
+    background: var(--surface-tertiary);
     user-select: none;
+    transition: all 0.13s;
   }
+  .legend-item.active  { color: var(--text-primary); border-color: transparent; }
+  .legend-item.inactive { opacity: 0.32; }
 
-  .legend-item.active {
-    border-color: transparent;
-    color: var(--text);
-  }
+  .legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 
-  .legend-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
+  .chart-body { padding: 18px 10px 12px; height: 350px; }
 
-  .legend-item.active .legend-dot {
-    box-shadow: 0 0 8px currentColor;
-  }
+  /* ========== TABLE ========== */
+  .table-card { background: var(--surface-secondary); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px var(--shadow); }
+  .table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .table-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .table-wrap { overflow-x: auto; max-height: 310px; overflow-y: auto; }
 
-  .legend-item.inactive {
-    opacity: 0.4;
-  }
-
-  .chart-body {
-    padding: 24px 16px 16px;
-    height: 380px;
-    position: relative;
-  }
-
-  /* SUMMARY CARDS */
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-
-  .summary-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 22px;
-  }
-
-  .summary-card.highlight {
-    border-color: var(--accent);
-    background: rgba(212,175,55,0.04);
-  }
-
-  .summary-label {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 10px;
-  }
-
-  .summary-value {
-    font-family: 'Inter Display', 'Inter', sans-serif;
-    font-weight: 700;
-    font-size: 28px;
-    letter-spacing: -0.02em;
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-
-  .summary-sub {
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-
-  .badge-pos { color: var(--green); }
-  .badge-neg { color: #f87171; }
-
-  /* TABLE */
-  .table-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  .table-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .table-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .table-wrap {
-    overflow-x: auto;
-    max-height: 340px;
-    overflow-y: auto;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
-  thead th {
-    padding: 11px 16px;
-    text-align: right;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    white-space: nowrap;
-  }
-
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  thead th { padding: 9px 13px; text-align: right; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); background: var(--surface-tertiary); border-bottom: 1px solid var(--border); position: sticky; top: 0; white-space: nowrap; }
   thead th:first-child { text-align: center; }
-
-  tbody td {
-    padding: 10px 16px;
-    text-align: right;
-    border-bottom: 1px solid var(--border);
-    font-variant-numeric: tabular-nums;
-    color: var(--text-light);
-  }
-
-  tbody td:first-child {
-    text-align: center;
-    color: var(--text-muted);
-    font-weight: 500;
-  }
-
+  tbody td { padding: 9px 13px; text-align: right; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+  tbody td:first-child { text-align: center; color: var(--text-muted); font-weight: 600; }
   tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--accent-dim); color: var(--text-primary); }
 
-  tbody tr:hover td {
-    background: rgba(255,255,255,0.02);
-    color: var(--text);
-  }
-
-  .td-green { color: var(--green) !important; }
-  .td-blue { color: var(--blue) !important; }
-  .td-orange { color: var(--orange) !important; }
-
-  /* SCROLLBAR */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  /* ========== SCROLLBAR ========== */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-  /* FOOTER */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 28px 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: var(--text-muted);
-    font-size: 12px;
-    max-width: 100%;
-  }
-
-  footer a {
-    color: var(--text-muted);
-    text-decoration: none;
-    transition: color 0.15s;
-  }
-
+  /* ========== FOOTER ========== */
+  footer { border-top: 1px solid var(--border); padding: 22px 28px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: 11px; }
+  footer a { color: var(--text-muted); text-decoration: none; transition: color 0.13s; }
   footer a:hover { color: var(--accent); }
 
+  /* ========== RESPONSIVE ========== */
   @media (max-width: 900px) {
-    header { padding: 18px 20px; }
-    .hero { padding: 50px 20px 40px; }
-    .main { grid-template-columns: 1fr; padding: 0 20px 60px; }
+    .main { grid-template-columns: 1fr; padding: 20px 14px 60px; }
     .params-panel { position: static; top: auto; }
-    .summary-grid { grid-template-columns: 1fr 1fr; }
-    footer { padding: 20px; flex-direction: column; gap: 8px; text-align: center; }
+    .summary-grid, .insight-grid { grid-template-columns: 1fr 1fr; }
+    footer { padding: 16px 14px; flex-direction: column; gap: 6px; text-align: center; }
   }
-
-  @media (max-width: 600px) {
-    .summary-grid { grid-template-columns: 1fr; }
+  @media (max-width: 540px) {
+    .summary-grid, .insight-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 
-<div class="hero">
-  <div class="hero-label">Analyse-Tool</div>
-  <h1>FLV vs. Flatex Depot —<br><em>Der direkte Vergleich</em></h1>
-  <p>Alle Werte nach Steuern. Vergleiche Fondsgebundene Lebensversicherung mit einem thesaurierenden oder ausschüttenden Depot über deine individuelle Laufzeit.</p>
-</div>
+<button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+  <span class="theme-icon" id="themeIcon">☀️</span>
+  <span id="themeLabel">Light Mode</span>
+</button>
 
 <div class="main">
 
-  <!-- PARAMS -->
+  <!-- ===== PARAMS ===== -->
   <aside class="params-panel">
 
     <div class="params-section">
       <div class="section-label">Allgemeine Parameter</div>
-
       <div class="field">
         <label>Monatliche Sparrate</label>
         <div class="field-unit">
@@ -550,7 +420,6 @@
           <span class="unit-badge">€ / Mo.</span>
         </div>
       </div>
-
       <div class="field">
         <label>Laufzeit</label>
         <div class="field-unit">
@@ -558,7 +427,6 @@
           <span class="unit-badge">Jahre</span>
         </div>
       </div>
-
       <div class="field">
         <label>Marktrendite p.a.</label>
         <div class="field-unit">
@@ -574,12 +442,12 @@
       <button class="btn-add" onclick="addEinmal()">+ Einmalzahlung hinzufügen</button>
     </div>
 
+    <!-- FLV collapsible -->
     <div class="collapsible-trigger" onclick="toggleCollapsible(this)" id="trigger-flv">
       <div class="section-label">FLV — Kostenparameter</div>
       <span class="collapsible-arrow">▼</span>
     </div>
     <div class="collapsible-body" id="body-flv">
-
       <div class="field">
         <label>Agio Einmaleinlagen</label>
         <div class="field-unit">
@@ -587,7 +455,6 @@
           <span class="unit-badge">%</span>
         </div>
       </div>
-
       <div class="field">
         <label>Laufende Kosten auf Einmalanlagen p.a.</label>
         <div class="field-unit">
@@ -595,15 +462,14 @@
           <span class="unit-badge">% p.a.</span>
         </div>
       </div>
-
     </div>
 
+    <!-- Depot collapsible -->
     <div class="collapsible-trigger" onclick="toggleCollapsible(this)" id="trigger-depot">
       <div class="section-label">Flatex Depot — Kostenparameter</div>
       <span class="collapsible-arrow">▼</span>
     </div>
     <div class="collapsible-body" id="body-depot">
-
       <div class="field">
         <label>Agio Depot</label>
         <div class="field-unit">
@@ -611,7 +477,6 @@
           <span class="unit-badge">%</span>
         </div>
       </div>
-
       <div class="field">
         <label>Sparplan-Ordergebühr</label>
         <div class="field-unit">
@@ -619,7 +484,6 @@
           <span class="unit-badge">€ / Order</span>
         </div>
       </div>
-
       <div class="field">
         <label>Einzelkauf-Ordergebühr</label>
         <div class="field-unit">
@@ -627,7 +491,6 @@
           <span class="unit-badge">€ / Order</span>
         </div>
       </div>
-
       <div class="field">
         <label>TER (Fondskostenquote p.a.)</label>
         <div class="field-unit">
@@ -635,7 +498,6 @@
           <span class="unit-badge">% p.a.</span>
         </div>
       </div>
-
       <div class="field">
         <label>KESt (Kapitalertragsteuer)</label>
         <div class="field-unit">
@@ -643,7 +505,6 @@
           <span class="unit-badge">%</span>
         </div>
       </div>
-
       <div class="field">
         <label>Dividendenrendite p.a.</label>
         <div class="field-unit">
@@ -651,7 +512,6 @@
           <span class="unit-badge">% p.a.</span>
         </div>
       </div>
-
       <div class="field">
         <label>Anteil ausschüttungsgleicher Erträge (AgE)</label>
         <div class="field-unit">
@@ -659,7 +519,6 @@
           <span class="unit-badge">%</span>
         </div>
       </div>
-
     </div>
 
     <div class="params-section">
@@ -668,10 +527,33 @@
 
   </aside>
 
-  <!-- RESULTS -->
-  <div class="results-panel" id="results">
+  <!-- ===== RESULTS ===== -->
+  <div class="results-panel">
 
-    <div class="summary-grid" id="summary-grid">
+    <!-- Break-even + Delta insights -->
+    <div class="insight-grid">
+      <div class="insight-card accent-card">
+        <span class="insight-icon">⚖️</span>
+        <div class="insight-label">Break-even FLV vs. Thesaurierend</div>
+        <div class="insight-value accent" id="breakeven-thes">—</div>
+        <div class="insight-sub" id="breakeven-thes-sub">Ab diesem Jahr überholt die FLV das Depot</div>
+      </div>
+      <div class="insight-card accent-card">
+        <span class="insight-icon">⚖️</span>
+        <div class="insight-label">Break-even FLV vs. Ausschüttend</div>
+        <div class="insight-value accent" id="breakeven-ausch">—</div>
+        <div class="insight-sub" id="breakeven-ausch-sub">Ab diesem Jahr überholt die FLV das Depot</div>
+      </div>
+      <div class="insight-card">
+        <span class="insight-icon">📊</span>
+        <div class="insight-label">FLV-Vorteil am Laufzeitende</div>
+        <div class="insight-value" id="delta-best">—</div>
+        <div class="insight-sub" id="delta-best-sub">Gegenüber bestem Depot-Ergebnis</div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-grid">
       <div class="summary-card">
         <div class="summary-label">FLV (Netto)</div>
         <div class="summary-value td-green" id="sum-flv">—</div>
@@ -689,6 +571,7 @@
       </div>
     </div>
 
+    <!-- Chart -->
     <div class="chart-card">
       <div class="chart-header">
         <div class="chart-title">Kapitalentwicklung (nach Steuern)</div>
@@ -699,6 +582,7 @@
       </div>
     </div>
 
+    <!-- Table -->
     <div class="table-card">
       <div class="table-header">
         <span class="table-title">Jahrestabelle — alle Werte nach Steuern</span>
@@ -709,13 +593,13 @@
             <tr>
               <th>Jahr</th>
               <th>Eingezahlt</th>
-              <th style="color: var(--green)">FLV Netto</th>
-              <th style="color: var(--blue)">Depot Thesaur.</th>
-              <th style="color: var(--orange)">Depot Ausschütt.</th>
+              <th style="color:#4ade80">FLV Netto</th>
+              <th style="color:#60a5fa">Depot Thesaur.</th>
+              <th style="color:#fb923c">Depot Ausschütt.</th>
             </tr>
           </thead>
           <tbody id="table-body">
-            <tr><td colspan="5" style="text-align:center; padding: 40px; color: var(--text-muted);">Starte die Berechnung ↑</td></tr>
+            <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted)">Starte die Berechnung ←</td></tr>
           </tbody>
         </table>
       </div>
@@ -725,20 +609,34 @@
 </div>
 
 <footer>
-  <span>© 2026 Jason Schreiber · Vermögensberatung & Versicherungen Wien</span>
+  <span>© 2026 Jason Schreiber · Vermögensberatung &amp; Versicherungen Wien</span>
   <span>Alle Angaben ohne Gewähr · Kein Anlageberatungsersatz · <a href="https://jasonschreiber.at">jasonschreiber.at</a></span>
 </footer>
 
 <script>
-function toggleCollapsible(trigger) {
-  trigger.classList.toggle('open');
-  const bodyId = trigger.id.replace('trigger-', 'body-');
-  const body = document.getElementById(bodyId);
-  body.classList.toggle('open');
+// ========================
+// THEME
+// ========================
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeIcon').textContent  = isDark ? '🌙' : '☀️';
+  document.getElementById('themeLabel').textContent = isDark ? 'Dark Mode' : 'Light Mode';
+  if (lastData) renderChart(lastData);
 }
 
 // ========================
-// EINMALZAHLUNGEN UI
+// COLLAPSIBLE
+// ========================
+function toggleCollapsible(trigger) {
+  trigger.classList.toggle('open');
+  const bodyId = trigger.id.replace('trigger-', 'body-');
+  document.getElementById(bodyId).classList.toggle('open');
+}
+
+// ========================
+// EINMALZAHLUNGEN
 // ========================
 let einmalData = [
   { jahr: 0, betrag: 0 },
@@ -754,21 +652,20 @@ function renderEinmal() {
     row.className = 'einmal-row';
     row.innerHTML = `
       <div>
-        ${i === 0 ? '<label>Jahr</label>' : '<label>&nbsp;</label>'}
+        ${i === 0 ? '<label>Jahr</label>' : '<label style="visibility:hidden">J</label>'}
         <div class="field-unit">
-          <input type="number" value="${e.jahr}" min="0" onchange="einmalData[${i}].jahr=+this.value" style="border-radius:6px 0 0 6px;border-right:none">
+          <input type="number" value="${e.jahr}" min="0" onchange="einmalData[${i}].jahr=+this.value" style="border-radius:8px 0 0 8px;border-right:none">
           <span class="unit-badge">J.</span>
         </div>
       </div>
       <div>
-        ${i === 0 ? '<label>Betrag</label>' : '<label>&nbsp;</label>'}
+        ${i === 0 ? '<label>Betrag</label>' : '<label style="visibility:hidden">B</label>'}
         <div class="field-unit">
-          <input type="number" value="${e.betrag}" min="0" step="100" onchange="einmalData[${i}].betrag=+this.value" style="border-radius:6px 0 0 6px;border-right:none">
+          <input type="number" value="${e.betrag}" min="0" step="100" onchange="einmalData[${i}].betrag=+this.value" style="border-radius:8px 0 0 8px;border-right:none">
           <span class="unit-badge">€</span>
         </div>
       </div>
-      <div>
-        ${i === 0 ? '<label>&nbsp;</label>' : ''}
+      <div style="display:flex;align-items:flex-end">
         <button class="btn-remove" onclick="removeEinmal(${i})" title="Entfernen">×</button>
       </div>
     `;
@@ -776,37 +673,19 @@ function renderEinmal() {
   });
 }
 
-function addEinmal() {
-  einmalData.push({ jahr: 0, betrag: 0 });
-  renderEinmal();
-}
-
-function removeEinmal(i) {
-  einmalData.splice(i, 1);
-  renderEinmal();
-}
-
+function addEinmal()       { einmalData.push({ jahr: 0, betrag: 0 }); renderEinmal(); }
+function removeEinmal(i)   { einmalData.splice(i, 1); renderEinmal(); }
 renderEinmal();
 
 // ========================
 // CHART
 // ========================
-let myChart = null;
+let myChart  = null;
+let lastData = null;
 let visibilityState = { flv: true, thes: true, ausch: true, einzahlt: true };
 
-const COLORS = {
-  flv:     '#4ade80',
-  thes:    '#60a5fa',
-  ausch:   '#fb923c',
-  einzahlt:'#6b7280'
-};
-
-const LABELS = {
-  flv:     'FLV Netto',
-  thes:    'Depot Thesaurierend',
-  ausch:   'Depot Ausschüttend',
-  einzahlt:'Eingezahltes Kapital'
-};
+const COLORS = { flv: '#4ade80', thes: '#60a5fa', ausch: '#fb923c', einzahlt: '#555860' };
+const LABELS = { flv: 'FLV Netto', thes: 'Depot Thesaurierend', ausch: 'Depot Ausschüttend', einzahlt: 'Eingezahltes Kapital' };
 
 function buildLegend() {
   const legend = document.getElementById('legend');
@@ -820,8 +699,7 @@ function buildLegend() {
       visibilityState[key] = !visibilityState[key];
       if (myChart) {
         const dsMap = { flv: 0, thes: 1, ausch: 2, einzahlt: 3 };
-        const ds = myChart.data.datasets[dsMap[key]];
-        ds.hidden = !visibilityState[key];
+        myChart.data.datasets[dsMap[key]].hidden = !visibilityState[key];
         myChart.update();
       }
       buildLegend();
@@ -829,104 +707,50 @@ function buildLegend() {
     legend.appendChild(item);
   });
 }
-
 buildLegend();
 
-function renderChart(data) {
-  const ctx = document.getElementById('myChart').getContext('2d');
-  if (myChart) myChart.destroy();
+function getTC() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return {
+    grid:   dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)',
+    ticks:  dark ? '#555860' : '#AAAAAA',
+    ttBg:   dark ? '#16171B' : '#F7F2EA',
+    ttBdr:  dark ? '#282930' : '#DEDAD3',
+    ttTitle:dark ? '#F0EDE8' : '#1A1A1A',
+    ttBody: '#969696'
+  };
+}
 
-  const labels = data.map(r => r.Jahr);
+function renderChart(data) {
+  if (myChart) myChart.destroy();
+  const tc  = getTC();
+  const ctx = document.getElementById('myChart').getContext('2d');
 
   myChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels,
+      labels: data.map(r => r.Jahr),
       datasets: [
-        {
-          label: LABELS.flv,
-          data: data.map(r => r.FLV_Netto),
-          borderColor: COLORS.flv,
-          backgroundColor: 'rgba(74,222,128,0.06)',
-          borderWidth: 2.5,
-          tension: 0.4,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-          fill: false,
-          hidden: !visibilityState.flv
-        },
-        {
-          label: LABELS.thes,
-          data: data.map(r => r.Depot_Thesaurierend_Netto),
-          borderColor: COLORS.thes,
-          backgroundColor: 'rgba(96,165,250,0.06)',
-          borderWidth: 2.5,
-          tension: 0.4,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-          fill: false,
-          hidden: !visibilityState.thes
-        },
-        {
-          label: LABELS.ausch,
-          data: data.map(r => r.Depot_Ausschuettend_Netto),
-          borderColor: COLORS.ausch,
-          backgroundColor: 'rgba(251,146,60,0.06)',
-          borderWidth: 2,
-          borderDash: [5, 3],
-          tension: 0.4,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-          fill: false,
-          hidden: !visibilityState.ausch
-        },
-        {
-          label: LABELS.einzahlt,
-          data: data.map(r => r.Eingezahlt),
-          borderColor: COLORS.einzahlt,
-          backgroundColor: 'transparent',
-          borderWidth: 1.5,
-          borderDash: [6, 4],
-          tension: 0,
-          pointRadius: 0,
-          fill: false,
-          hidden: !visibilityState.einzahlt
-        }
+        { label: LABELS.flv,      data: data.map(r => r.FLV_Netto),                 borderColor: COLORS.flv,      backgroundColor: 'rgba(74,222,128,0.05)',  borderWidth: 2.5, tension: 0.4, pointRadius: 0, pointHoverRadius: 4, fill: false, hidden: !visibilityState.flv },
+        { label: LABELS.thes,     data: data.map(r => r.Depot_Thesaurierend_Netto),  borderColor: COLORS.thes,     backgroundColor: 'rgba(96,165,250,0.05)',   borderWidth: 2.5, tension: 0.4, pointRadius: 0, pointHoverRadius: 4, fill: false, hidden: !visibilityState.thes },
+        { label: LABELS.ausch,    data: data.map(r => r.Depot_Ausschuettend_Netto),  borderColor: COLORS.ausch,    backgroundColor: 'rgba(251,146,60,0.05)',   borderWidth: 2,   borderDash: [5,3], tension: 0.4, pointRadius: 0, pointHoverRadius: 4, fill: false, hidden: !visibilityState.ausch },
+        { label: LABELS.einzahlt, data: data.map(r => r.Eingezahlt),                 borderColor: COLORS.einzahlt, backgroundColor: 'transparent',            borderWidth: 1.5, borderDash: [6,4], tension: 0, pointRadius: 0, fill: false, hidden: !visibilityState.einzahlt }
       ]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#1a1a1a',
-          borderColor: '#2e2e2e',
-          borderWidth: 1,
-          padding: 12,
-          titleColor: '#f0ede8',
-          bodyColor: '#b0aa9f',
-          callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: ${formatEur(ctx.parsed.y)}`
-          }
+          backgroundColor: tc.ttBg, borderColor: tc.ttBdr, borderWidth: 1,
+          padding: 12, titleColor: tc.ttTitle, bodyColor: tc.ttBody,
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${formatEur(ctx.parsed.y)}` }
         }
       },
       scales: {
-        x: {
-          grid: { color: 'rgba(255,255,255,0.04)', drawTicks: false },
-          ticks: { color: '#7a7570', font: { size: 11 }, maxTicksLimit: 10 },
-          border: { color: 'transparent' }
-        },
-        y: {
-          grid: { color: 'rgba(255,255,255,0.04)', drawTicks: false },
-          ticks: {
-            color: '#7a7570',
-            font: { size: 11 },
-            callback: v => formatEurShort(v)
-          },
-          border: { color: 'transparent' }
-        }
+        x: { grid: { color: tc.grid, drawTicks: false }, ticks: { color: tc.ticks, font: { size: 11, family: 'Inter' }, maxTicksLimit: 10 }, border: { color: 'transparent' } },
+        y: { grid: { color: tc.grid, drawTicks: false }, ticks: { color: tc.ticks, font: { size: 11, family: 'Inter' }, callback: v => formatEurShort(v) }, border: { color: 'transparent' } }
       }
     }
   });
@@ -942,30 +766,31 @@ function berechne() {
   const einmaleinlagen = einmalData.map(e => ({ jahr: parseInt(e.jahr), betrag: parseFloat(e.betrag) || 0 }));
 
   const flv_params = {
-    agio_einmal:           parseFloat(document.getElementById('flv_agio').value) / 100,
+    agio_einmal:            parseFloat(document.getElementById('flv_agio').value) / 100,
     laufende_kosten_einmal: parseFloat(document.getElementById('flv_kosten').value) / 100
   };
 
   const depot_params = {
-    agio:         parseFloat(document.getElementById('depot_agio').value) / 100,
+    agio:           parseFloat(document.getElementById('depot_agio').value) / 100,
     order_sparplan: parseFloat(document.getElementById('depot_sparplan').value),
     order_einmal:   parseFloat(document.getElementById('depot_einzel').value),
-    ter:          parseFloat(document.getElementById('depot_ter').value) / 100,
-    kest:         parseFloat(document.getElementById('depot_kest').value) / 100,
-    div_rendite:  parseFloat(document.getElementById('depot_div').value) / 100,
-    anteil_age:   parseFloat(document.getElementById('depot_age').value) / 100
+    ter:            parseFloat(document.getElementById('depot_ter').value) / 100,
+    kest:           parseFloat(document.getElementById('depot_kest').value) / 100,
+    div_rendite:    parseFloat(document.getElementById('depot_div').value) / 100,
+    anteil_age:     parseFloat(document.getElementById('depot_age').value) / 100
   };
 
   const data = berechneVergleich(monatsbeitrag, laufzeit_jahre, rendite_pa, einmaleinlagen, flv_params, depot_params);
+  lastData = data;
 
   renderChart(data);
   renderTable(data);
   renderSummary(data);
+  renderInsights(data);
   buildLegend();
 }
 
 function berechneVergleich(monatsbeitrag, laufzeit_jahre, rendite_pa, einmaleinlagen, flv_params, depot_params) {
-
   const ref_rendite = 0.06;
   const q_ref = Math.pow(1 + ref_rendite, 1/12);
 
@@ -974,19 +799,11 @@ function berechneVergleich(monatsbeitrag, laufzeit_jahre, rendite_pa, einmaleinl
     return m_rate * ((Math.pow(q_ref, n_monate) - 1) / (q_ref - 1));
   }
 
-  // Anchor tables (from Python)
-  const basis_100_anker = {
-    0: 0.0, 1: 618.06, 2: 1270.27, 3: 1961.42, 4: 2693.89, 5: 3470.10,
-    10: 11062.82, 15: 21209.92, 20: 34766.96, 25: 52875.92, 30: 77060.00, 35: 109352.45, 40: 152464.60
-  };
-  const basis_500_anker = {
-    0: 0.0, 1: 3204.64, 2: 6597.50, 3: 10192.99, 4: 14003.30, 5: 18041.10,
-    10: 56149.33, 15: 108933.69, 20: 178401.14, 25: 271203.42, 30: 395157.38, 35: 560699.45
-  };
+  const basis_100_anker = { 0:0.0, 1:618.06, 2:1270.27, 3:1961.42, 4:2693.89, 5:3470.10, 10:11062.82, 15:21209.92, 20:34766.96, 25:52875.92, 30:77060.00, 35:109352.45, 40:152464.60 };
+  const basis_500_anker = { 0:0.0, 1:3204.64, 2:6597.50, 3:10192.99, 4:14003.30, 5:18041.10, 10:56149.33, 15:108933.69, 20:178401.14, 25:271203.42, 30:395157.38, 35:560699.45 };
 
-  const q_flv = Math.pow(1 + rendite_pa, 1/12);
-  const effektiv_zins_depot = rendite_pa - depot_params.ter;
-  const q_depot = Math.pow(1 + effektiv_zins_depot, 1/12);
+  const q_flv   = Math.pow(1 + rendite_pa, 1/12);
+  const q_depot = Math.pow(1 + rendite_pa - depot_params.ter, 1/12);
 
   function rentenwert_flv(m_rate, n_monate) {
     if (Math.abs(rendite_pa) < 1e-8) return m_rate * n_monate;
@@ -994,52 +811,37 @@ function berechneVergleich(monatsbeitrag, laufzeit_jahre, rendite_pa, einmaleinl
   }
 
   const ergebnisse = [];
-  let kum_einmalzahlungen = 0;
-  let kapital_flv_monatlich = 0.0;
+  let kum_einmalzahlungen = 0, kapital_flv_monatlich = 0.0;
+  let kapital_t_brutto = 0.0, basis_t = 0.0, kapital_a_brutto = 0.0, basis_a = 0.0;
 
-  let kapital_t_brutto = 0.0;
-  let basis_t = 0.0;
-  let kapital_a_brutto = 0.0;
-  let basis_a = 0.0;
-
-  // Jahr 0 Einmalzahlungen
   for (const anlage of einmaleinlagen) {
     if (anlage.jahr <= 0) {
       kum_einmalzahlungen += anlage.betrag;
-      basis_t += anlage.betrag;
-      basis_a += anlage.betrag;
-      const netto_depot = Math.max(0, anlage.betrag * (1 - depot_params.agio) - depot_params.order_einmal);
-      kapital_t_brutto += netto_depot;
-      kapital_a_brutto += netto_depot;
+      basis_t += anlage.betrag; basis_a += anlage.betrag;
+      const netto = Math.max(0, anlage.betrag * (1 - depot_params.agio) - depot_params.order_einmal);
+      kapital_t_brutto += netto; kapital_a_brutto += netto;
     }
   }
 
   for (let jahr = 1; jahr <= laufzeit_jahre; jahr++) {
-    const monate_bisher = jahr * 12;
-
-    // FLV block interpolation
     let block_start, block_end, anzahl_monate;
     if (jahr <= 5) {
       block_start = jahr - 1; block_end = jahr; anzahl_monate = 12;
     } else {
       block_start = Math.floor((jahr - 1) / 5) * 5;
-      block_end = block_start + 5;
-      anzahl_monate = 60;
+      block_end = block_start + 5; anzahl_monate = 60;
     }
 
-    const k_start_100 = basis_100_anker[block_start];
-    const k_end_100   = basis_100_anker[block_end];
-    const k_start_500 = basis_500_anker[block_start];
-    const k_end_500   = basis_500_anker[block_end];
+    const ks100 = basis_100_anker[block_start], ke100 = basis_100_anker[block_end];
+    const ks500 = basis_500_anker[block_start], ke500 = basis_500_anker[block_end];
 
-    function calc_m_rate(k_start, k_end) {
-      return (k_end - k_start * Math.pow(q_ref, anzahl_monate)) / rentenwert_ref(1, anzahl_monate);
+    function calc_m_rate(ks, ke) {
+      return (ke - ks * Math.pow(q_ref, anzahl_monate)) / rentenwert_ref(1, anzahl_monate);
     }
 
     let m_100, m_500;
-    if (k_end_100 !== undefined && k_end_500 !== undefined) {
-      m_100 = calc_m_rate(k_start_100, k_end_100);
-      m_500 = calc_m_rate(k_start_500, k_end_500);
+    if (ke100 !== undefined && ke500 !== undefined) {
+      m_100 = calc_m_rate(ks100, ke100); m_500 = calc_m_rate(ks500, ke500);
     } else {
       m_100 = calc_m_rate(basis_100_anker[35], basis_100_anker[40]);
       m_500 = calc_m_rate(basis_500_anker[30], basis_500_anker[35]);
@@ -1049,74 +851,50 @@ function berechneVergleich(monatsbeitrag, laufzeit_jahre, rendite_pa, einmaleinl
     kapital_flv_monatlich = kapital_flv_monatlich * Math.pow(q_flv, 12) + rentenwert_flv(m_aktuell, 12);
 
     let kapital_flv_einmal = 0;
-
-    // Sonderzahlungen
     for (const anlage of einmaleinlagen) {
       if (anlage.jahr === jahr) {
         kum_einmalzahlungen += anlage.betrag;
-        basis_t += anlage.betrag;
-        basis_a += anlage.betrag;
-        const netto_depot = Math.max(0, anlage.betrag * (1 - depot_params.agio) - depot_params.order_einmal);
-        kapital_t_brutto += netto_depot;
-        kapital_a_brutto += netto_depot;
+        basis_t += anlage.betrag; basis_a += anlage.betrag;
+        const netto = Math.max(0, anlage.betrag * (1 - depot_params.agio) - depot_params.order_einmal);
+        kapital_t_brutto += netto; kapital_a_brutto += netto;
       }
-
       if (jahr >= anlage.jahr) {
-        let jahre_seit_anlage;
-        if (anlage.jahr > 0) {
-          jahre_seit_anlage = jahr - anlage.jahr + 1;
-        } else {
-          jahre_seit_anlage = jahr;
-        }
-        const startwert = anlage.betrag * (1 - flv_params.agio_einmal);
-        const kostendrag_faktor = (1 - flv_params.laufende_kosten_einmal);
-        const rendite_faktor = (1 + rendite_pa);
-        kapital_flv_einmal += startwert * Math.pow(kostendrag_faktor, jahre_seit_anlage) * Math.pow(rendite_faktor, jahre_seit_anlage);
+        const jsa = anlage.jahr > 0 ? (jahr - anlage.jahr + 1) : jahr;
+        kapital_flv_einmal += anlage.betrag * (1 - flv_params.agio_einmal)
+          * Math.pow(1 - flv_params.laufende_kosten_einmal, jsa)
+          * Math.pow(1 + rendite_pa, jsa);
       }
     }
 
-    // Depot monatlich
-    for (let monat = 1; monat <= 12; monat++) {
-      basis_t += monatsbeitrag;
-      basis_a += monatsbeitrag;
-      const netto_sparplan = Math.max(0, monatsbeitrag * (1 - depot_params.agio) - depot_params.order_sparplan);
-      kapital_t_brutto += netto_sparplan;
-      kapital_a_brutto += netto_sparplan;
-      kapital_t_brutto *= q_depot;
-      kapital_a_brutto *= q_depot;
+    for (let m = 1; m <= 12; m++) {
+      basis_t += monatsbeitrag; basis_a += monatsbeitrag;
+      const ns = Math.max(0, monatsbeitrag * (1 - depot_params.agio) - depot_params.order_sparplan);
+      kapital_t_brutto += ns; kapital_a_brutto += ns;
+      kapital_t_brutto *= q_depot; kapital_a_brutto *= q_depot;
     }
 
-    // Jahresende KESt (Österreich)
-    const thesaurierungs_ertrag = kapital_t_brutto * depot_params.div_rendite;
-    const steuer_t = thesaurierungs_ertrag * depot_params.anteil_age * depot_params.kest;
+    const th_ertrag = kapital_t_brutto * depot_params.div_rendite;
+    const steuer_t  = th_ertrag * depot_params.anteil_age * depot_params.kest;
     kapital_t_brutto -= steuer_t;
-    basis_t += thesaurierungs_ertrag * depot_params.anteil_age;
+    basis_t += th_ertrag * depot_params.anteil_age;
 
-    const dividende_a = kapital_a_brutto * depot_params.div_rendite;
-    const steuer_a = dividende_a * depot_params.kest;
+    const div_a    = kapital_a_brutto * depot_params.div_rendite;
+    const steuer_a = div_a * depot_params.kest;
     kapital_a_brutto -= steuer_a;
-    basis_a += dividende_a - steuer_a;
+    basis_a += div_a - steuer_a;
 
-    // Netto bei fiktivem Verkauf
-    const flv_netto = kapital_flv_monatlich + kapital_flv_einmal;
-
-    const gewinn_t = Math.max(0, kapital_t_brutto - basis_t);
-    const depot_thesaur_netto = kapital_t_brutto - gewinn_t * depot_params.kest;
-
-    const gewinn_a = Math.max(0, kapital_a_brutto - basis_a);
-    const depot_aussch_netto = kapital_a_brutto - gewinn_a * depot_params.kest;
-
-    const einzahlung_gesamt = monatsbeitrag * monate_bisher + kum_einmalzahlungen;
+    const flv_netto           = kapital_flv_monatlich + kapital_flv_einmal;
+    const depot_thesaur_netto = kapital_t_brutto - Math.max(0, kapital_t_brutto - basis_t) * depot_params.kest;
+    const depot_aussch_netto  = kapital_a_brutto - Math.max(0, kapital_a_brutto - basis_a) * depot_params.kest;
 
     ergebnisse.push({
       Jahr: jahr,
-      Eingezahlt: einzahlung_gesamt,
+      Eingezahlt: monatsbeitrag * (jahr * 12) + kum_einmalzahlungen,
       FLV_Netto: flv_netto,
       Depot_Thesaurierend_Netto: depot_thesaur_netto,
       Depot_Ausschuettend_Netto: depot_aussch_netto
     });
   }
-
   return ergebnisse;
 }
 
@@ -1138,12 +916,50 @@ function renderSummary(data) {
   document.getElementById('sum-flv').textContent   = formatEur(last.FLV_Netto);
   document.getElementById('sum-thes').textContent  = formatEur(last.Depot_Thesaurierend_Netto);
   document.getElementById('sum-ausch').textContent = formatEur(last.Depot_Ausschuettend_Netto);
-
-  // Highlight winner
   document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('highlight'));
   const vals = [last.FLV_Netto, last.Depot_Thesaurierend_Netto, last.Depot_Ausschuettend_Netto];
-  const maxIdx = vals.indexOf(Math.max(...vals));
-  document.querySelectorAll('.summary-card')[maxIdx].classList.add('highlight');
+  document.querySelectorAll('.summary-card')[vals.indexOf(Math.max(...vals))].classList.add('highlight');
+}
+
+function renderInsights(data) {
+  const last = data[data.length - 1];
+
+  // Break-even vs Thesaurierend
+  let beThes = null;
+  for (let i = 0; i < data.length; i++) {
+    if (data[i].FLV_Netto >= data[i].Depot_Thesaurierend_Netto) { beThes = data[i].Jahr; break; }
+  }
+  if (beThes !== null) {
+    document.getElementById('breakeven-thes').textContent = 'Jahr ' + beThes;
+    document.getElementById('breakeven-thes-sub').textContent = `Ab Jahr ${beThes} liegt die FLV vorne`;
+  } else {
+    document.getElementById('breakeven-thes').textContent = 'Nie';
+    document.getElementById('breakeven-thes-sub').textContent = 'FLV überholt das Depot in dieser Laufzeit nicht';
+  }
+
+  // Break-even vs Ausschüttend
+  let beAusch = null;
+  for (let i = 0; i < data.length; i++) {
+    if (data[i].FLV_Netto >= data[i].Depot_Ausschuettend_Netto) { beAusch = data[i].Jahr; break; }
+  }
+  if (beAusch !== null) {
+    document.getElementById('breakeven-ausch').textContent = 'Jahr ' + beAusch;
+    document.getElementById('breakeven-ausch-sub').textContent = `Ab Jahr ${beAusch} liegt die FLV vorne`;
+  } else {
+    document.getElementById('breakeven-ausch').textContent = 'Nie';
+    document.getElementById('breakeven-ausch-sub').textContent = 'FLV überholt das Depot in dieser Laufzeit nicht';
+  }
+
+  // Delta FLV vs best depot
+  const bestDepot = Math.max(last.Depot_Thesaurierend_Netto, last.Depot_Ausschuettend_Netto);
+  const bestName  = last.Depot_Thesaurierend_Netto >= last.Depot_Ausschuettend_Netto ? 'Thesaurierend' : 'Ausschüttend';
+  const delta = last.FLV_Netto - bestDepot;
+  const el    = document.getElementById('delta-best');
+  el.textContent = (delta >= 0 ? '+' : '') + formatEur(delta);
+  el.className   = 'insight-value ' + (delta >= 0 ? 'positive' : 'negative');
+  document.getElementById('delta-best-sub').textContent = delta >= 0
+    ? `FLV schlägt das beste Depot (${bestName}) um ${formatEur(delta)}`
+    : `Depot ${bestName} schlägt die FLV um ${formatEur(Math.abs(delta))}`;
 }
 
 function renderTable(data) {
@@ -1162,9 +978,7 @@ function renderTable(data) {
   });
 }
 
-// Auto-calculate on load
 window.addEventListener('DOMContentLoaded', () => berechne());
 </script>
-
 </body>
 </html>
