@@ -3,404 +3,787 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FLV vs. Depot Vergleichsrechner | Jason Schreiber</title>
+<title>Finanzplan | Jason Schreiber</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Inter+Display:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <style>
-  /* ========== TOKENS — Dark (default) ========== */
+/* ==================== TOKENS ==================== */
+:root {
+  --sp: #0F0F0F; --ss: #16171B; --st: #282930;
+  --bp: #38D9A3; --bh: #2FC493; --bpr: #1C8764;
+  --brd: #212430; --tp: #F0EDE8; --ts: #969696; --tm: #555860;
+  --ac: #38D9A3; --adim: rgba(56,217,163,0.08); --adim2: rgba(56,217,163,0.15);
+  --sh: rgba(0,0,0,0.5); --gl: rgba(255,255,255,0.04);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
   :root {
-    --surface-primary:   #0F0F0F;
-    --surface-secondary: #16171B;
-    --surface-tertiary:  #282930;
-    --btn-primary:       #38D9A3;
-    --btn-hover:         #2FC493;
-    --btn-pressed:       #1C8764;
-    --border:            #212430;
-    --text-primary:      #F0EDE8;
-    --text-secondary:    #969696;
-    --text-muted:        #555860;
-    --accent:            #38D9A3;
-    --accent-dim:        rgba(56,217,163,0.08);
-    --shadow:            rgba(0,0,0,0.45);
-    --grid-line:         rgba(255,255,255,0.04);
-    color-scheme: dark;
+    --sp: #EDEBE5; --ss: #F7F2EA; --st: #FFFEFC;
+    --bp: #039F6B; --bh: #2FC493; --bpr: #1C8764;
+    --brd: #DDD8CF; --tp: #1A1A1A; --ts: #969696; --tm: #AAAAAA;
+    --ac: #039F6B; --adim: rgba(3,159,107,0.08); --adim2: rgba(3,159,107,0.15);
+    --sh: rgba(0,0,0,0.08); --gl: rgba(0,0,0,0.05);
+    color-scheme: light;
   }
+}
 
-  /* ========== TOKENS — Light (system preference) ========== */
-  @media (prefers-color-scheme: light) {
-    :root {
-      --surface-primary:   #EDEBE5;
-      --surface-secondary: #F7F2EA;
-      --surface-tertiary:  #FFFEFC;
-      --btn-primary:       #039F6B;
-      --btn-hover:         #2FC493;
-      --btn-pressed:       #1C8764;
-      --border:            #DDD8CF;
-      --text-primary:      #1A1A1A;
-      --text-secondary:    #969696;
-      --text-muted:        #AAAAAA;
-      --accent:            #039F6B;
-      --accent-dim:        rgba(3,159,107,0.08);
-      --shadow:            rgba(0,0,0,0.07);
-      --grid-line:         rgba(0,0,0,0.05);
-      color-scheme: light;
-    }
-  }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--sp);
+  color: var(--tp);
+  font-family: 'Inter Display','Inter',sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
 
-  body {
-    background: var(--surface-primary);
-    color: var(--text-primary);
-    font-family: 'Inter Display', 'Inter', sans-serif;
-    font-size: 15px;
-    line-height: 1.6;
-    min-height: 100vh;
-    transition: background 0.2s, color 0.2s;
-  }
+/* ==================== VIEWS ==================== */
+.view { display: none; }
+.view.active { display: block; }
 
-  /* ========== LAYOUT ========== */
-  .main {
-    max-width: 1240px;
-    margin: 0 auto;
-    padding: 36px 28px 80px;
-    display: grid;
-    grid-template-columns: 360px 1fr;
-    gap: 24px;
-    align-items: start;
-  }
+/* ==================== BACK NAV ==================== */
+.back-nav {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 20px 28px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-  /* ========== PARAMS PANEL ========== */
-  .params-panel {
-    background: var(--surface-secondary);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    position: sticky;
-    top: 20px;
-    box-shadow: 0 4px 20px var(--shadow);
-  }
+.back-btn {
+  background: none;
+  border: 1px solid var(--brd);
+  border-radius: 8px;
+  padding: 6px 14px 6px 10px;
+  color: var(--ts);
+  font-family: 'Inter Display','Inter',sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+.back-btn:hover { border-color: var(--ac); color: var(--ac); background: var(--adim); }
 
-  .params-section {
-    padding: 18px 20px;
-    border-bottom: 1px solid var(--border);
-  }
-  .params-section:last-child { border-bottom: none; }
+.back-crumb { font-size: 12px; color: var(--tm); }
+.back-crumb span { color: var(--ts); }
 
-  .section-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 14px;
-  }
+/* ==================== DASHBOARD ==================== */
+.dash-wrap {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 40px 28px 80px;
+}
 
-  /* ========== COLLAPSIBLE ========== */
-  .collapsible-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    user-select: none;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-  }
-  .collapsible-trigger:hover { background: var(--accent-dim); }
-  .collapsible-trigger .section-label { margin-bottom: 0; }
+.dash-header { margin-bottom: 36px; }
+.dash-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ac); margin-bottom: 10px;
+}
+.dash-title {
+  font-size: clamp(28px, 4vw, 44px); font-weight: 700;
+  letter-spacing: -0.025em; line-height: 1.1;
+  color: var(--tp); margin-bottom: 10px;
+}
+.dash-sub { font-size: 14px; color: var(--ts); max-width: 540px; line-height: 1.7; }
 
-  .collapsible-arrow {
-    color: var(--text-muted);
-    font-size: 9px;
-    transition: transform 0.22s ease;
-    flex-shrink: 0;
-  }
-  .collapsible-trigger.open .collapsible-arrow { transform: rotate(180deg); }
+/* Summary bar */
+.dash-summary {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 14px;
+  margin-bottom: 32px;
+  padding: 20px;
+  background: var(--ss);
+  border: 1px solid var(--brd);
+  border-radius: 16px;
+}
+.dash-sum-item { text-align: center; }
+.dash-sum-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ts); margin-bottom: 6px; }
+.dash-sum-value { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--tp); }
+.dash-sum-value.accent { color: var(--ac); }
+.dash-sum-divider { width: 1px; background: var(--brd); }
 
-  .collapsible-body {
-    display: none;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-  }
-  .collapsible-body.open { display: block; }
+/* Pillar cards grid */
+.pillar-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 18px;
+}
 
-  /* ========== FIELDS ========== */
-  .field { margin-bottom: 13px; }
-  .field:last-child { margin-bottom: 0; }
+.pillar-card {
+  background: var(--ss);
+  border: 1px solid var(--brd);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 20px var(--sh);
+  display: flex;
+  flex-direction: column;
+}
+.pillar-card:hover { border-color: var(--ac); transform: translateY(-2px); box-shadow: 0 8px 32px var(--sh), 0 0 0 1px var(--adim2); }
 
-  label {
-    display: block;
-    font-size: 11.5px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin-bottom: 5px;
-  }
+.pillar-card-top {
+  padding: 24px 24px 0;
+  flex: 1;
+}
 
-  input[type="number"] {
-    width: 100%;
-    background: var(--surface-tertiary);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text-primary);
-    font-family: 'Inter Display', 'Inter', sans-serif;
-    font-size: 14px;
-    padding: 8px 11px;
-    outline: none;
-    transition: border-color 0.15s;
-    -moz-appearance: textfield;
-  }
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
-  input[type="number"]:focus { border-color: var(--accent); background: var(--accent-dim); }
+.pillar-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 100px;
+  margin-bottom: 16px;
+}
+.pillar-badge.kurz   { background: rgba(251,191,36,0.12); color: #fbbf24; }
+.pillar-badge.mittel { background: rgba(96,165,250,0.12); color: #60a5fa; }
+.pillar-badge.lang   { background: var(--adim2);           color: var(--ac); }
 
-  .field-unit { display: flex; }
-  .field-unit input { border-radius: 8px 0 0 8px; border-right: none; }
+.pillar-icon { font-size: 18px; }
 
-  .unit-badge {
-    background: var(--surface-primary);
-    border: 1px solid var(--border);
-    border-left: none;
-    border-radius: 0 8px 8px 0;
-    padding: 8px 10px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-muted);
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-  }
+.pillar-title {
+  font-size: 18px; font-weight: 700; letter-spacing: -0.01em;
+  margin-bottom: 8px; color: var(--tp);
+}
+.pillar-desc { font-size: 12.5px; color: var(--ts); line-height: 1.65; margin-bottom: 18px; }
 
-  /* ========== EINMAL ========== */
-  .einmal-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 28px;
-    gap: 7px;
-    margin-bottom: 7px;
-    align-items: end;
-  }
+/* Mini metrics in pillar card */
+.pillar-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--brd);
+  border-top: 1px solid var(--brd);
+  margin-top: auto;
+}
+.pillar-metric {
+  background: var(--st);
+  padding: 14px 16px;
+}
+.pillar-metric:first-child { border-radius: 0; }
+.pm-label { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tm); margin-bottom: 4px; }
+.pm-value { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; color: var(--tp); }
+.pm-value.green  { color: #4ade80; }
+.pm-value.blue   { color: #60a5fa; }
+.pm-value.yellow { color: #fbbf24; }
+.pm-value.accent { color: var(--ac); }
+.pm-value.muted  { color: var(--ts); font-size: 12px; font-weight: 500; }
 
-  .btn-remove {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    border-radius: 6px;
-    width: 28px;
-    height: 34px;
-    cursor: pointer;
-    font-size: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.13s;
-  }
-  .btn-remove:hover { border-color: #f87171; color: #f87171; background: rgba(248,113,113,0.08); }
+.pillar-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: none;
+  border-top: 1px solid var(--brd);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ac);
+  transition: background 0.15s;
+}
+.pillar-card:hover .pillar-cta { background: var(--adim); }
+.cta-arrow { font-size: 14px; transition: transform 0.15s; }
+.pillar-card:hover .cta-arrow { transform: translateX(4px); }
 
-  .btn-add {
-    background: none;
-    border: 1px dashed var(--border);
-    color: var(--text-secondary);
-    border-radius: 8px;
-    padding: 7px;
-    width: 100%;
-    cursor: pointer;
-    font-size: 12px;
-    font-family: 'Inter Display', 'Inter', sans-serif;
-    font-weight: 500;
-    transition: all 0.13s;
-    margin-top: 3px;
-  }
-  .btn-add:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+/* ==================== CALC LAYOUT ==================== */
+.calc-layout {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px 28px 80px;
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  align-items: start;
+}
 
-  /* ========== CALC BTN ========== */
-  .btn-calc {
-    width: 100%;
-    background: var(--btn-primary);
-    color: #051a10;
-    border: none;
-    border-radius: 8px;
-    padding: 12px;
-    font-family: 'Inter Display', 'Inter', sans-serif;
-    font-size: 12.5px;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.13s, transform 0.1s, box-shadow 0.13s;
-  }
-  .btn-calc:hover { background: var(--btn-hover); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(56,217,163,0.22); }
-  .btn-calc:active { background: var(--btn-pressed); transform: translateY(0); box-shadow: none; }
+/* ==================== PARAMS PANEL ==================== */
+.params-panel {
+  background: var(--ss);
+  border: 1px solid var(--brd);
+  border-radius: 14px;
+  overflow: hidden;
+  position: sticky;
+  top: 20px;
+  box-shadow: 0 4px 20px var(--sh);
+}
+.params-section { padding: 18px 20px; border-bottom: 1px solid var(--brd); }
+.params-section:last-child { border-bottom: none; }
 
-  /* ========== RESULTS ========== */
-  .results-panel { display: flex; flex-direction: column; gap: 18px; }
+.section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ac); margin-bottom: 14px;
+}
 
-  /* ========== INSIGHT CARDS ========== */
-  .insight-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-  }
+/* Collapsible */
+.coll-trigger {
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
+  padding: 16px 20px; border-bottom: 1px solid var(--brd);
+  transition: background 0.15s;
+}
+.coll-trigger:hover { background: var(--adim); }
+.coll-trigger .section-label { margin-bottom: 0; }
+.coll-arrow { color: var(--tm); font-size: 9px; transition: transform 0.22s; }
+.coll-trigger.open .coll-arrow { transform: rotate(180deg); }
+.coll-body { display: none; padding: 16px 20px; border-bottom: 1px solid var(--brd); }
+.coll-body.open { display: block; }
 
-  .insight-card {
-    background: var(--surface-secondary);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px;
-    box-shadow: 0 2px 10px var(--shadow);
-  }
-  .insight-card.accent-card { border-color: var(--accent); background: var(--accent-dim); }
+/* Fields */
+.field { margin-bottom: 13px; }
+.field:last-child { margin-bottom: 0; }
+label { display: block; font-size: 11.5px; font-weight: 500; color: var(--ts); margin-bottom: 5px; }
 
-  .insight-icon { font-size: 17px; margin-bottom: 9px; display: block; }
+input[type="number"], input[type="text"], select {
+  width: 100%;
+  background: var(--st); border: 1px solid var(--brd); border-radius: 8px;
+  color: var(--tp); font-family: 'Inter Display','Inter',sans-serif;
+  font-size: 14px; padding: 8px 11px; outline: none;
+  transition: border-color 0.15s; -moz-appearance: textfield; appearance: none;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+input:focus, select:focus { border-color: var(--ac); background: var(--adim); }
+select option { background: var(--ss); }
 
-  .insight-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: 7px;
-  }
+.field-unit { display: flex; }
+.field-unit input, .field-unit select { border-radius: 8px 0 0 8px; border-right: none; }
+.unit-badge {
+  background: var(--sp); border: 1px solid var(--brd); border-left: none;
+  border-radius: 0 8px 8px 0; padding: 8px 10px;
+  font-size: 11px; font-weight: 500; color: var(--tm);
+  white-space: nowrap; display: flex; align-items: center;
+}
 
-  .insight-value {
-    font-family: 'Inter Display', 'Inter', sans-serif;
-    font-weight: 700;
-    font-size: 24px;
-    letter-spacing: -0.02em;
-    line-height: 1;
-    margin-bottom: 7px;
-    color: var(--text-primary);
-  }
-  .insight-value.accent   { color: var(--accent); }
-  .insight-value.positive { color: #4ade80; }
-  .insight-value.negative { color: #f87171; }
+/* Einmal rows */
+.einmal-row { display: grid; grid-template-columns: 1fr 1fr 28px; gap: 7px; margin-bottom: 7px; align-items: end; }
+.btn-remove { background:none; border:1px solid var(--brd); color:var(--tm); border-radius:6px; width:28px; height:34px; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; transition:all 0.13s; }
+.btn-remove:hover { border-color:#f87171; color:#f87171; background:rgba(248,113,113,0.08); }
+.btn-add { background:none; border:1px dashed var(--brd); color:var(--ts); border-radius:8px; padding:7px; width:100%; cursor:pointer; font-size:12px; font-family:'Inter Display','Inter',sans-serif; font-weight:500; transition:all 0.13s; margin-top:3px; }
+.btn-add:hover { border-color:var(--ac); color:var(--ac); background:var(--adim); }
 
-  .insight-sub { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+/* Calc button */
+.btn-calc { width:100%; background:var(--bp); color:#051a10; border:none; border-radius:8px; padding:12px; font-family:'Inter Display','Inter',sans-serif; font-size:12.5px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; cursor:pointer; transition:background 0.13s,transform 0.1s,box-shadow 0.13s; }
+.btn-calc:hover { background:var(--bh); transform:translateY(-1px); box-shadow:0 6px 18px rgba(56,217,163,0.22); }
+.btn-calc:active { background:var(--bpr); transform:translateY(0); box-shadow:none; }
 
-  /* ========== SUMMARY CARDS ========== */
-  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+/* ==================== RESULTS ==================== */
+.results-panel { display: flex; flex-direction: column; gap: 18px; }
 
-  .summary-card {
-    background: var(--surface-secondary);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px;
-    box-shadow: 0 2px 10px var(--shadow);
-    transition: border-color 0.2s;
-  }
-  .summary-card.highlight { border-color: var(--accent); }
+.card { background:var(--ss); border:1px solid var(--brd); border-radius:14px; overflow:hidden; box-shadow:0 2px 10px var(--sh); }
+.card-header { padding:16px 22px; border-bottom:1px solid var(--brd); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+.card-title { font-weight:600; font-size:14px; color:var(--tp); }
+.card-body { padding:20px 22px; }
 
-  .summary-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 9px; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
 
-  .summary-value { font-family: 'Inter Display', 'Inter', sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.02em; line-height: 1; margin-bottom: 6px; }
+.metric { background:var(--ss); border:1px solid var(--brd); border-radius:14px; padding:18px; box-shadow:0 2px 10px var(--sh); }
+.metric.ac { border-color:var(--ac); background:var(--adim); }
+.metric.win { border-color:var(--ac); }
+.metric-icon { font-size:16px; margin-bottom:8px; display:block; }
+.metric-label { font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ts); margin-bottom:7px; }
+.metric-value { font-weight:700; font-size:24px; letter-spacing:-0.02em; line-height:1; margin-bottom:5px; color:var(--tp); }
+.metric-value.green { color:#4ade80; }
+.metric-value.blue  { color:#60a5fa; }
+.metric-value.ac    { color:var(--ac); }
+.metric-value.pos   { color:#4ade80; }
+.metric-value.neg   { color:#f87171; }
+.metric-sub { font-size:11px; color:var(--ts); line-height:1.5; }
 
-  .summary-sub { font-size: 11px; color: var(--text-secondary); }
+/* Progress */
+.prog-wrap { background:var(--st); border-radius:100px; height:8px; overflow:hidden; margin:10px 0 4px; }
+.prog-fill  { height:100%; border-radius:100px; background:var(--ac); transition:width 0.4s ease; }
 
-  .td-green  { color: #4ade80 !important; }
-  .td-blue   { color: #60a5fa !important; }
-  .td-orange { color: #fb923c !important; }
+/* Chart */
+.legend { display:flex; flex-wrap:wrap; gap:5px; }
+.legend-item { display:flex; align-items:center; gap:6px; padding:4px 10px; border:1px solid var(--brd); border-radius:100px; cursor:pointer; font-size:11px; font-weight:500; color:var(--ts); background:var(--st); user-select:none; transition:all 0.13s; }
+.legend-item.active { color:var(--tp); border-color:transparent; }
+.legend-item.inactive { opacity:0.32; }
+.legend-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.chart-body { padding:18px 10px 12px; height:320px; }
 
-  /* ========== CHART ========== */
-  .chart-card {
-    background: var(--surface-secondary);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px var(--shadow);
-  }
+/* Table */
+.table-wrap { overflow-x:auto; max-height:300px; overflow-y:auto; }
+table { width:100%; border-collapse:collapse; font-size:12.5px; }
+thead th { padding:9px 13px; text-align:right; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--ts); background:var(--st); border-bottom:1px solid var(--brd); position:sticky; top:0; white-space:nowrap; }
+thead th:first-child { text-align:center; }
+tbody td { padding:9px 13px; text-align:right; border-bottom:1px solid var(--brd); font-variant-numeric:tabular-nums; color:var(--ts); }
+tbody td:first-child { text-align:center; color:var(--tm); font-weight:600; }
+tbody tr:last-child td { border-bottom:none; }
+tbody tr:hover td { background:var(--adim); color:var(--tp); }
 
-  .chart-header {
-    padding: 18px 22px 14px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
+/* Info box */
+.info-box { background:var(--adim); border:1px solid rgba(56,217,163,0.18); border-radius:10px; padding:12px 14px; font-size:12px; color:var(--ts); line-height:1.6; margin-top:8px; }
+.info-box strong { color:var(--ac); }
 
-  .chart-title { font-weight: 600; font-size: 15px; color: var(--text-primary); }
+/* Scrollbar */
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--brd); border-radius:3px; }
 
-  .legend { display: flex; flex-wrap: wrap; gap: 5px; }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border: 1px solid var(--border);
-    border-radius: 100px;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    background: var(--surface-tertiary);
-    user-select: none;
-    transition: all 0.13s;
-  }
-  .legend-item.active  { color: var(--text-primary); border-color: transparent; }
-  .legend-item.inactive { opacity: 0.32; }
-
-  .legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-
-  .chart-body { padding: 18px 10px 12px; height: 350px; }
-
-  /* ========== TABLE ========== */
-  .table-card { background: var(--surface-secondary); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px var(--shadow); }
-  .table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); }
-  .table-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-  .table-wrap { overflow-x: auto; max-height: 310px; overflow-y: auto; }
-
-  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-  thead th { padding: 9px 13px; text-align: right; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); background: var(--surface-tertiary); border-bottom: 1px solid var(--border); position: sticky; top: 0; white-space: nowrap; }
-  thead th:first-child { text-align: center; }
-  tbody td { padding: 9px 13px; text-align: right; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; color: var(--text-secondary); }
-  tbody td:first-child { text-align: center; color: var(--text-muted); font-weight: 600; }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: var(--accent-dim); color: var(--text-primary); }
-
-  /* ========== SCROLLBAR ========== */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  /* ========== RESPONSIVE ========== */
-  @media (max-width: 900px) {
-    .main { grid-template-columns: 1fr; padding: 20px 14px 60px; }
-    .params-panel { position: static; top: auto; }
-    .summary-grid, .insight-grid { grid-template-columns: 1fr 1fr; }
-  }
-  @media (max-width: 540px) {
-    .summary-grid, .insight-grid { grid-template-columns: 1fr; }
-  }
+/* Responsive */
+@media (max-width: 900px) {
+  .pillar-grid { grid-template-columns:1fr; }
+  .calc-layout { grid-template-columns:1fr; padding:16px 14px 60px; }
+  .params-panel { position:static; }
+  .grid-2,.grid-3 { grid-template-columns:1fr 1fr; }
+  .dash-wrap { padding:24px 14px 60px; }
+  .dash-summary { grid-template-columns:1fr; }
+  .back-nav { padding:14px 14px 0; }
+}
+@media (max-width: 540px) {
+  .grid-2,.grid-3 { grid-template-columns:1fr; }
+  .pillar-metrics { grid-template-columns:1fr; }
+}
 </style>
 </head>
 <body>
 
-<div class="main">
+<!-- ================================================================
+     VIEW 0 — DASHBOARD
+================================================================ -->
+<div class="view active" id="view-dash">
+<div class="dash-wrap">
 
-  <!-- ===== PARAMS ===== -->
+  <div class="dash-header">
+    <div class="dash-label">Finanzplanung</div>
+    <div class="dash-title">Dein 3-Säulen-Konzept</div>
+    <div class="dash-sub">Kurzfristige Sicherheit, mittelfristige Ziele, langfristiger Vermögensaufbau — alles auf einen Blick.</div>
+  </div>
+
+  <!-- Summary overview bar -->
+  <div class="dash-summary">
+    <div class="dash-sum-item">
+      <div class="dash-sum-label">🏦 Notgroschen-Fortschritt</div>
+      <div class="dash-sum-value accent" id="dash-kurz-val">Noch nicht berechnet</div>
+    </div>
+    <div class="dash-sum-item" style="border-left:1px solid var(--brd);border-right:1px solid var(--brd);padding:0 20px">
+      <div class="dash-sum-label">🎯 Mittelfristige Prognose</div>
+      <div class="dash-sum-value" id="dash-mittel-val" style="color:var(--ts)">Noch nicht berechnet</div>
+    </div>
+    <div class="dash-sum-item">
+      <div class="dash-sum-label">📈 Pensionsvorsorge (FLV)</div>
+      <div class="dash-sum-value" id="dash-lang-val" style="color:var(--ts)">Noch nicht berechnet</div>
+    </div>
+  </div>
+
+  <!-- Pillar cards -->
+  <div class="pillar-grid">
+
+    <!-- KURZ -->
+    <div class="pillar-card" onclick="goTo('kurz')">
+      <div class="pillar-card-top">
+        <div class="pillar-badge kurz"><span class="pillar-icon">🏦</span>Kurzfristig · &lt; 1 Jahr</div>
+        <div class="pillar-title">Notgroschen</div>
+        <div class="pillar-desc">Dein finanzielles Sicherheitsnetz für unerwartete Ausgaben — sofort verfügbar, gut verzinst. Empfohlen: 3–6 Monatsgehälter auf einem Tagesgeldkonto.</div>
+      </div>
+      <div class="pillar-metrics">
+        <div class="pillar-metric">
+          <div class="pm-label">Ziel-Betrag</div>
+          <div class="pm-value yellow" id="dash-k-ziel">—</div>
+        </div>
+        <div class="pillar-metric">
+          <div class="pm-label">Dauer bis Ziel</div>
+          <div class="pm-value yellow" id="dash-k-dauer">—</div>
+        </div>
+      </div>
+      <div class="pillar-cta">Rechner öffnen <span class="cta-arrow">→</span></div>
+    </div>
+
+    <!-- MITTEL -->
+    <div class="pillar-card" onclick="goTo('mittel')">
+      <div class="pillar-card-top">
+        <div class="pillar-badge mittel"><span class="pillar-icon">🎯</span>Mittelfristig · 2–10 Jahre</div>
+        <div class="pillar-title">Zielsparen</div>
+        <div class="pillar-desc">Für konkrete Lebensziele wie Eigenkapital, Auto oder Bildung. Mit einem Fondssparplan erzielst du deutlich mehr als mit Tagesgeld allein.</div>
+      </div>
+      <div class="pillar-metrics">
+        <div class="pillar-metric">
+          <div class="pm-label">Fonds-Ergebnis</div>
+          <div class="pm-value blue" id="dash-m-fonds">—</div>
+        </div>
+        <div class="pillar-metric">
+          <div class="pm-label">vs. Tagesgeld</div>
+          <div class="pm-value blue" id="dash-m-delta">—</div>
+        </div>
+      </div>
+      <div class="pillar-cta">Rechner öffnen <span class="cta-arrow">→</span></div>
+    </div>
+
+    <!-- LANG -->
+    <div class="pillar-card" onclick="goTo('lang')">
+      <div class="pillar-card-top">
+        <div class="pillar-badge lang"><span class="pillar-icon">📈</span>Langfristig · 20–40 Jahre</div>
+        <div class="pillar-title">Pensionsvorsorge</div>
+        <div class="pillar-desc">Vergleich Fondsgebundene Lebensversicherung vs. Flatex Depot — inklusive aller Kosten, Steuern und Break-even-Analyse für optimale Entscheidung.</div>
+      </div>
+      <div class="pillar-metrics">
+        <div class="pillar-metric">
+          <div class="pm-label">FLV Netto</div>
+          <div class="pm-value accent" id="dash-l-flv">—</div>
+        </div>
+        <div class="pillar-metric">
+          <div class="pm-label">Depot Thesaur.</div>
+          <div class="pm-value accent" id="dash-l-depot">—</div>
+        </div>
+      </div>
+      <div class="pillar-cta">Rechner öffnen <span class="cta-arrow">→</span></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ================================================================
+     VIEW 1 — KURZFRISTIG
+================================================================ -->
+<div class="view" id="view-kurz">
+<div class="back-nav">
+  <button class="back-btn" onclick="goTo('dash')">← Zurück</button>
+  <span class="back-crumb">Finanzplan / <span>Notgroschen</span></span>
+</div>
+<div class="calc-layout">
+
   <aside class="params-panel">
+    <div class="params-section">
+      <div class="section-label">Meine Situation</div>
+      <div class="field">
+        <label>Monatliches Nettoeinkommen</label>
+        <div class="field-unit">
+          <input type="number" id="k_einkommen" value="2500" min="0" step="100" oninput="berechneKurz()">
+          <span class="unit-badge">€ / Mo.</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Bereits vorhandenes Erspartes</label>
+        <div class="field-unit">
+          <input type="number" id="k_vorhandenes" value="0" min="0" step="100" oninput="berechneKurz()">
+          <span class="unit-badge">€</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Monatliche Sparrate</label>
+        <div class="field-unit">
+          <input type="number" id="k_sparrate" value="300" min="0" step="50" oninput="berechneKurz()">
+          <span class="unit-badge">€ / Mo.</span>
+        </div>
+      </div>
+    </div>
 
+    <div class="params-section">
+      <div class="section-label">Notgroschen-Ziel</div>
+      <div class="field">
+        <label>Absicherung in Monatsgehältern</label>
+        <div class="field-unit">
+          <input type="number" id="k_monate" value="3" min="1" max="12" step="1" oninput="berechneKurz()">
+          <span class="unit-badge">Monate</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="params-section">
+      <div class="section-label">Konto & Zinsen</div>
+      <div class="field">
+        <label>Kontotyp</label>
+        <div class="field-unit">
+          <select id="k_kontotyp" onchange="updateKontoHint(); berechneKurz()">
+            <option value="tagesgeld">Tagesgeldkonto</option>
+            <option value="festgeld">Festgeld</option>
+            <option value="sparkonto">Sparkonto</option>
+            <option value="girokonto">Girokonto (0%)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Zinssatz p.a.</label>
+        <div class="field-unit">
+          <input type="number" id="k_zins" value="3.0" min="0" max="20" step="0.1" oninput="berechneKurz()">
+          <span class="unit-badge">% p.a.</span>
+        </div>
+      </div>
+      <div class="info-box" id="k_hint">Tagesgeld: täglich verfügbar, aktuell 2–4 % p.a. — ideal für den Notgroschen.</div>
+    </div>
+
+    <div class="params-section">
+      <button class="btn-calc" onclick="berechneKurz()">Berechnen</button>
+    </div>
+  </aside>
+
+  <div class="results-panel">
+    <div class="grid-3">
+      <div class="metric ac">
+        <span class="metric-icon">🎯</span>
+        <div class="metric-label">Notgroschen-Ziel</div>
+        <div class="metric-value ac" id="k_ziel">—</div>
+        <div class="metric-sub" id="k_ziel_sub">—</div>
+      </div>
+      <div class="metric">
+        <span class="metric-icon">📅</span>
+        <div class="metric-label">Dauer bis zum Ziel</div>
+        <div class="metric-value" id="k_dauer">—</div>
+        <div class="metric-sub" id="k_dauer_sub">bei aktueller Sparrate</div>
+      </div>
+      <div class="metric">
+        <span class="metric-icon">💰</span>
+        <div class="metric-label">Zinsertrag gesamt</div>
+        <div class="metric-value green" id="k_zinsen">—</div>
+        <div class="metric-sub">bis zum Ziel</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Aufbau des Notgroschens</span>
+        <span style="font-size:12px;color:var(--ts)" id="k_prog_label"></span>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ts);margin-bottom:4px">
+          <span id="k_prog_start">Vorhanden: 0 €</span>
+          <span id="k_prog_end">Ziel: — €</span>
+        </div>
+        <div class="prog-wrap"><div class="prog-fill" id="k_prog_bar" style="width:0%"></div></div>
+        <div style="font-size:11px;color:var(--tm);text-align:right;margin-top:4px" id="k_prog_pct">0 % erreicht</div>
+        <div class="chart-body" style="height:240px;margin-top:14px">
+          <canvas id="kurzChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Monatsplan bis zum Ziel</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Monat</th><th>Sparrate</th><th>Zinsen</th><th>Kapital gesamt</th><th>Noch bis Ziel</th></tr></thead>
+          <tbody id="kurz-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ================================================================
+     VIEW 2 — MITTELFRISTIG
+================================================================ -->
+<div class="view" id="view-mittel">
+<div class="back-nav">
+  <button class="back-btn" onclick="goTo('dash')">← Zurück</button>
+  <span class="back-crumb">Finanzplan / <span>Zielsparen</span></span>
+</div>
+<div class="calc-layout">
+
+  <aside class="params-panel">
+    <div class="params-section">
+      <div class="section-label">Mein Sparziel</div>
+      <div class="field">
+        <label>Bezeichnung</label>
+        <input type="text" id="m_name" value="Eigenkapital Hauskauf" placeholder="z.B. Eigenkapital, Auto …" oninput="berechneMittel()">
+      </div>
+      <div class="field">
+        <label>Zielbetrag</label>
+        <div class="field-unit">
+          <input type="number" id="m_ziel" value="50000" min="0" step="1000" oninput="berechneMittel()">
+          <span class="unit-badge">€</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Laufzeit (Zeithorizont)</label>
+        <div class="field-unit">
+          <input type="number" id="m_jahre" value="7" min="1" max="30" step="1" oninput="berechneMittel()">
+          <span class="unit-badge">Jahre</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Startkapital (bereits gespart)</label>
+        <div class="field-unit">
+          <input type="number" id="m_start" value="5000" min="0" step="500" oninput="berechneMittel()">
+          <span class="unit-badge">€</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="params-section">
+      <div class="section-label">Monatliche Sparrate</div>
+      <div class="field">
+        <div class="field-unit">
+          <input type="number" id="m_sparrate" value="500" min="0" step="50" oninput="berechneMittel()">
+          <span class="unit-badge">€ / Mo.</span>
+        </div>
+      </div>
+      <div class="info-box" id="m_hint">Benötigte Sparrate wird automatisch berechnet.</div>
+    </div>
+
+    <div class="coll-trigger" onclick="toggleColl(this)" id="ctrig-fonds">
+      <div class="section-label">Fonds-Parameter</div>
+      <span class="coll-arrow">▼</span>
+    </div>
+    <div class="coll-body" id="cbody-fonds">
+      <div class="field">
+        <label>Erwartete Rendite p.a.</label>
+        <div class="field-unit">
+          <input type="number" id="m_rendite" value="6" min="0" max="30" step="0.5" oninput="berechneMittel()">
+          <span class="unit-badge">% p.a.</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>TER p.a.</label>
+        <div class="field-unit">
+          <input type="number" id="m_ter" value="0.3" min="0" step="0.01" oninput="berechneMittel()">
+          <span class="unit-badge">% p.a.</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Ordergebühr Sparplan</label>
+        <div class="field-unit">
+          <input type="number" id="m_order" value="1.50" min="0" step="0.10" oninput="berechneMittel()">
+          <span class="unit-badge">€ / Order</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>KESt bei Entnahme</label>
+        <div class="field-unit">
+          <input type="number" id="m_kest" value="27.5" min="0" max="100" step="0.5" oninput="berechneMittel()">
+          <span class="unit-badge">%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="coll-trigger" onclick="toggleColl(this)" id="ctrig-tages">
+      <div class="section-label">Vergleich: Tagesgeld</div>
+      <span class="coll-arrow">▼</span>
+    </div>
+    <div class="coll-body" id="cbody-tages">
+      <div class="field">
+        <label>Tagesgeld-Zinssatz p.a.</label>
+        <div class="field-unit">
+          <input type="number" id="m_tzins" value="3.0" min="0" max="20" step="0.1" oninput="berechneMittel()">
+          <span class="unit-badge">% p.a.</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>KESt auf Zinsen</label>
+        <div class="field-unit">
+          <input type="number" id="m_tkest" value="27.5" min="0" max="100" step="0.5" oninput="berechneMittel()">
+          <span class="unit-badge">%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="params-section">
+      <button class="btn-calc" onclick="berechneMittel()">Berechnen</button>
+    </div>
+  </aside>
+
+  <div class="results-panel">
+
+    <div class="grid-3">
+      <div class="metric ac">
+        <span class="metric-icon">🎯</span>
+        <div class="metric-label">Zielbetrag</div>
+        <div class="metric-value ac" id="m_ziel_show">—</div>
+        <div class="metric-sub" id="m_ziel_name">—</div>
+      </div>
+      <div class="metric">
+        <span class="metric-icon">📈</span>
+        <div class="metric-label">Fonds-Ergebnis</div>
+        <div class="metric-value blue" id="m_fonds_end">—</div>
+        <div class="metric-sub" id="m_fonds_sub">nach Kosten & KESt</div>
+      </div>
+      <div class="metric">
+        <span class="metric-icon">🏦</span>
+        <div class="metric-label">Tagesgeld-Ergebnis</div>
+        <div class="metric-value green" id="m_tages_end">—</div>
+        <div class="metric-sub">nach KESt</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="metric">
+        <span class="metric-icon">💡</span>
+        <div class="metric-label">Benötigte Sparrate (Fonds)</div>
+        <div class="metric-value" id="m_needed">—</div>
+        <div class="metric-sub">um Zielbetrag exakt zu erreichen</div>
+      </div>
+      <div class="metric">
+        <span class="metric-icon">⚡</span>
+        <div class="metric-label">Vorteil Fonds vs. Tagesgeld</div>
+        <div class="metric-value" id="m_delta">—</div>
+        <div class="metric-sub" id="m_delta_sub">am Laufzeitende</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Kapitalentwicklung über die Laufzeit</span>
+        <div class="legend" id="m_legend"></div>
+      </div>
+      <div class="chart-body"><canvas id="mittelChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Jahresübersicht</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Jahr</th>
+              <th>Eingezahlt</th>
+              <th style="color:#60a5fa">Fonds (netto)</th>
+              <th style="color:#4ade80">Tagesgeld (netto)</th>
+              <th>Ziellücke Fonds</th>
+            </tr>
+          </thead>
+          <tbody id="mittel-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ================================================================
+     VIEW 3 — LANGFRISTIG
+================================================================ -->
+<div class="view" id="view-lang">
+<div class="back-nav">
+  <button class="back-btn" onclick="goTo('dash')">← Zurück</button>
+  <span class="back-crumb">Finanzplan / <span>Pensionsvorsorge</span></span>
+</div>
+<div class="calc-layout">
+
+  <aside class="params-panel">
     <div class="params-section">
       <div class="section-label">Allgemeine Parameter</div>
       <div class="field">
         <label>Monatliche Sparrate</label>
         <div class="field-unit">
-          <input type="number" id="monatsbeitrag" value="100" min="1" step="10">
+          <input type="number" id="l_mb" value="100" min="1" step="10">
           <span class="unit-badge">€ / Mo.</span>
         </div>
       </div>
       <div class="field">
         <label>Laufzeit</label>
         <div class="field-unit">
-          <input type="number" id="laufzeit" value="40" min="1" max="50">
+          <input type="number" id="l_lj" value="40" min="1" max="50">
           <span class="unit-badge">Jahre</span>
         </div>
       </div>
       <div class="field">
         <label>Marktrendite p.a.</label>
         <div class="field-unit">
-          <input type="number" id="rendite" value="6" min="0" max="30" step="0.1">
+          <input type="number" id="l_rpa" value="6" min="0" max="30" step="0.1">
           <span class="unit-badge">% p.a.</span>
         </div>
       </div>
@@ -408,522 +791,591 @@
 
     <div class="params-section">
       <div class="section-label">Sonderzahlungen (Einmalanlagen)</div>
-      <div id="einmalzahlungen-container"></div>
+      <div id="einmal-container"></div>
       <button class="btn-add" onclick="addEinmal()">+ Einmalzahlung hinzufügen</button>
     </div>
 
-    <!-- FLV collapsible -->
-    <div class="collapsible-trigger" onclick="toggleCollapsible(this)" id="trigger-flv">
+    <div class="coll-trigger" onclick="toggleColl(this)" id="ctrig-flv">
       <div class="section-label">FLV — Kostenparameter</div>
-      <span class="collapsible-arrow">▼</span>
+      <span class="coll-arrow">▼</span>
     </div>
-    <div class="collapsible-body" id="body-flv">
+    <div class="coll-body" id="cbody-flv">
       <div class="field">
         <label>Agio Einmaleinlagen</label>
         <div class="field-unit">
-          <input type="number" id="flv_agio" value="7.65" step="0.01" min="0">
+          <input type="number" id="l_flv_agio" value="7.65" step="0.01" min="0">
           <span class="unit-badge">%</span>
         </div>
       </div>
       <div class="field">
-        <label>Laufende Kosten auf Einmalanlagen p.a.</label>
+        <label>Laufende Kosten p.a.</label>
         <div class="field-unit">
-          <input type="number" id="flv_kosten" value="0.61" step="0.01" min="0">
+          <input type="number" id="l_flv_kosten" value="0.61" step="0.01" min="0">
           <span class="unit-badge">% p.a.</span>
         </div>
       </div>
     </div>
 
-    <!-- Depot collapsible -->
-    <div class="collapsible-trigger" onclick="toggleCollapsible(this)" id="trigger-depot">
+    <div class="coll-trigger" onclick="toggleColl(this)" id="ctrig-depot">
       <div class="section-label">Flatex Depot — Kostenparameter</div>
-      <span class="collapsible-arrow">▼</span>
+      <span class="coll-arrow">▼</span>
     </div>
-    <div class="collapsible-body" id="body-depot">
-      <div class="field">
-        <label>Agio Depot</label>
-        <div class="field-unit">
-          <input type="number" id="depot_agio" value="0" step="0.1" min="0">
-          <span class="unit-badge">%</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Sparplan-Ordergebühr</label>
-        <div class="field-unit">
-          <input type="number" id="depot_sparplan" value="1.50" step="0.10" min="0">
-          <span class="unit-badge">€ / Order</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Einzelkauf-Ordergebühr</label>
-        <div class="field-unit">
-          <input type="number" id="depot_einzel" value="5.90" step="0.10" min="0">
-          <span class="unit-badge">€ / Order</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>TER (Fondskostenquote p.a.)</label>
-        <div class="field-unit">
-          <input type="number" id="depot_ter" value="0.30" step="0.01" min="0">
-          <span class="unit-badge">% p.a.</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>KESt (Kapitalertragsteuer)</label>
-        <div class="field-unit">
-          <input type="number" id="depot_kest" value="27.5" step="0.1" min="0" max="100">
-          <span class="unit-badge">%</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Dividendenrendite p.a.</label>
-        <div class="field-unit">
-          <input type="number" id="depot_div" value="2" step="0.1" min="0">
-          <span class="unit-badge">% p.a.</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Anteil ausschüttungsgleicher Erträge (AgE)</label>
-        <div class="field-unit">
-          <input type="number" id="depot_age" value="60" step="1" min="0" max="100">
-          <span class="unit-badge">%</span>
-        </div>
-      </div>
+    <div class="coll-body" id="cbody-depot">
+      <div class="field"><label>Agio Depot</label>
+        <div class="field-unit"><input type="number" id="l_d_agio" value="0" step="0.1" min="0"><span class="unit-badge">%</span></div></div>
+      <div class="field"><label>Sparplan-Ordergebühr</label>
+        <div class="field-unit"><input type="number" id="l_d_sparplan" value="1.50" step="0.10" min="0"><span class="unit-badge">€ / Order</span></div></div>
+      <div class="field"><label>Einzelkauf-Ordergebühr</label>
+        <div class="field-unit"><input type="number" id="l_d_einzel" value="5.90" step="0.10" min="0"><span class="unit-badge">€ / Order</span></div></div>
+      <div class="field"><label>TER p.a.</label>
+        <div class="field-unit"><input type="number" id="l_d_ter" value="0.30" step="0.01" min="0"><span class="unit-badge">% p.a.</span></div></div>
+      <div class="field"><label>KESt</label>
+        <div class="field-unit"><input type="number" id="l_d_kest" value="27.5" step="0.1" min="0" max="100"><span class="unit-badge">%</span></div></div>
+      <div class="field"><label>Dividendenrendite p.a.</label>
+        <div class="field-unit"><input type="number" id="l_d_div" value="2" step="0.1" min="0"><span class="unit-badge">% p.a.</span></div></div>
+      <div class="field"><label>Anteil AgE</label>
+        <div class="field-unit"><input type="number" id="l_d_age" value="60" step="1" min="0" max="100"><span class="unit-badge">%</span></div></div>
     </div>
 
     <div class="params-section">
-      <button class="btn-calc" onclick="berechne()">Berechnung starten</button>
+      <button class="btn-calc" onclick="berechneLang()">Berechnen</button>
     </div>
-
   </aside>
 
-  <!-- ===== RESULTS ===== -->
   <div class="results-panel">
 
-    <!-- Break-even + Delta insights -->
-    <div class="insight-grid">
-      <div class="insight-card accent-card">
-        <span class="insight-icon">⚖️</span>
-        <div class="insight-label">Break-even FLV vs. Depot</div>
-        <div class="insight-value accent" id="breakeven-thes">—</div>
-        <div class="insight-sub" id="breakeven-thes-sub" style="margin-bottom:10px"></div>
-        <div style="height:1px;background:var(--border);margin:10px 0"></div>
-        <div class="insight-label" style="margin-bottom:5px">vs. Ausschüttend</div>
-        <div class="insight-value accent" id="breakeven-ausch" style="font-size:18px;margin-bottom:4px">—</div>
-        <div class="insight-sub" id="breakeven-ausch-sub"></div>
+    <div class="grid-2">
+      <div class="metric ac">
+        <span class="metric-icon">⚖️</span>
+        <div class="metric-label">Break-even FLV vs. Depot</div>
+        <div class="metric-value ac" id="l_be_thes">—</div>
+        <div class="metric-sub" id="l_be_thes_sub" style="margin-bottom:10px"></div>
+        <div style="height:1px;background:var(--brd);margin:8px 0"></div>
+        <div class="metric-label" style="margin-bottom:5px">vs. Ausschüttend</div>
+        <div class="metric-value ac" id="l_be_ausch" style="font-size:18px;margin-bottom:4px">—</div>
+        <div class="metric-sub" id="l_be_ausch_sub"></div>
       </div>
-      <div class="insight-card">
-        <span class="insight-icon">📊</span>
-        <div class="insight-label">FLV-Vorteil am Laufzeitende</div>
-        <div class="insight-value" id="delta-best">—</div>
-        <div class="insight-sub" id="delta-best-sub">Gegenüber bestem Depot-Ergebnis</div>
-      </div>
-    </div>
-
-    <!-- Summary -->
-    <div class="summary-grid">
-      <div class="summary-card">
-        <div class="summary-label">FLV (Netto)</div>
-        <div class="summary-value td-green" id="sum-flv">—</div>
-        <div class="summary-sub">nach Kosten &amp; Steuer</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">Depot Thesaurierend</div>
-        <div class="summary-value td-blue" id="sum-thes">—</div>
-        <div class="summary-sub">nach KESt bei Verkauf</div>
+      <div class="metric">
+        <span class="metric-icon">📊</span>
+        <div class="metric-label">FLV-Vorteil am Laufzeitende</div>
+        <div class="metric-value" id="l_delta">—</div>
+        <div class="metric-sub" id="l_delta_sub">Gegenüber bestem Depot-Ergebnis</div>
       </div>
     </div>
 
-    <!-- Chart -->
-    <div class="chart-card">
-      <div class="chart-header">
-        <div class="chart-title">Kapitalentwicklung (nach Steuern)</div>
-        <div class="legend" id="legend"></div>
+    <div class="grid-2">
+      <div class="metric">
+        <div class="metric-label">FLV (Netto)</div>
+        <div class="metric-value green" id="l_sum_flv">—</div>
+        <div class="metric-sub">nach Kosten & Steuer</div>
       </div>
-      <div class="chart-body">
-        <canvas id="myChart"></canvas>
+      <div class="metric">
+        <div class="metric-label">Depot Thesaurierend</div>
+        <div class="metric-value blue" id="l_sum_thes">—</div>
+        <div class="metric-sub">nach KESt bei Verkauf</div>
       </div>
     </div>
 
-    <!-- Table -->
-    <div class="table-card">
-      <div class="table-header">
-        <span class="table-title">Jahrestabelle — alle Werte nach Steuern</span>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Kapitalentwicklung (nach Steuern)</span>
+        <div class="legend" id="l_legend"></div>
       </div>
+      <div class="chart-body"><canvas id="langChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Jahrestabelle — alle Werte nach Steuern</span></div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Jahr</th>
-              <th>Eingezahlt</th>
+              <th>Jahr</th><th>Eingezahlt</th>
               <th style="color:#4ade80">FLV Netto</th>
               <th style="color:#60a5fa">Depot Thesaur.</th>
               <th style="color:#fb923c">Depot Ausschütt.</th>
             </tr>
           </thead>
-          <tbody id="table-body">
-            <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted)">Starte die Berechnung ←</td></tr>
-          </tbody>
+          <tbody id="lang-table"></tbody>
         </table>
       </div>
     </div>
 
   </div>
 </div>
+</div>
 
 <script>
-// ========================
-// COLLAPSIBLE
-// ========================
-function toggleCollapsible(trigger) {
+/* ============================================================
+   NAVIGATION
+============================================================ */
+function goTo(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Update dashboard summary on return
+  if (id === 'dash') syncDash();
+}
+
+function syncDash() {
+  // Kurz
+  const kZ = document.getElementById('k_ziel')?.textContent;
+  const kD = document.getElementById('k_dauer')?.textContent;
+  if (kZ && kZ !== '—') {
+    document.getElementById('dash-kurz-val').textContent = kZ;
+    document.getElementById('dash-k-ziel').textContent = kZ;
+    document.getElementById('dash-k-dauer').textContent = kD || '—';
+  }
+  // Mittel
+  const mF = document.getElementById('m_fonds_end')?.textContent;
+  const mD = document.getElementById('m_delta')?.textContent;
+  if (mF && mF !== '—') {
+    document.getElementById('dash-mittel-val').textContent = mF;
+    document.getElementById('dash-mittel-val').style.color = 'var(--tp)';
+    document.getElementById('dash-m-fonds').textContent = mF;
+    document.getElementById('dash-m-delta').textContent = mD || '—';
+  }
+  // Lang
+  const lF = document.getElementById('l_sum_flv')?.textContent;
+  const lT = document.getElementById('l_sum_thes')?.textContent;
+  if (lF && lF !== '—') {
+    document.getElementById('dash-lang-val').textContent = lF;
+    document.getElementById('dash-lang-val').style.color = 'var(--tp)';
+    document.getElementById('dash-l-flv').textContent = lF;
+    document.getElementById('dash-l-depot').textContent = lT || '—';
+  }
+}
+
+/* ============================================================
+   COLLAPSIBLE
+============================================================ */
+function toggleColl(trigger) {
   trigger.classList.toggle('open');
-  const bodyId = trigger.id.replace('trigger-', 'body-');
+  const bodyId = trigger.id.replace('ctrig-', 'cbody-');
   document.getElementById(bodyId).classList.toggle('open');
 }
 
-// ========================
-// EINMALZAHLUNGEN
-// ========================
-let einmalData = [
-  { jahr: 0, betrag: 0 },
-  { jahr: 1, betrag: 0 },
-  { jahr: 2, betrag: 0 }
-];
-
-function renderEinmal() {
-  const container = document.getElementById('einmalzahlungen-container');
-  container.innerHTML = '';
-  einmalData.forEach((e, i) => {
-    const row = document.createElement('div');
-    row.className = 'einmal-row';
-    row.innerHTML = `
-      <div>
-        ${i === 0 ? '<label>Jahr</label>' : '<label style="visibility:hidden">J</label>'}
-        <div class="field-unit">
-          <input type="number" value="${e.jahr}" min="0" onchange="einmalData[${i}].jahr=+this.value" style="border-radius:8px 0 0 8px;border-right:none">
-          <span class="unit-badge">J.</span>
-        </div>
-      </div>
-      <div>
-        ${i === 0 ? '<label>Betrag</label>' : '<label style="visibility:hidden">B</label>'}
-        <div class="field-unit">
-          <input type="number" value="${e.betrag}" min="0" step="100" onchange="einmalData[${i}].betrag=+this.value" style="border-radius:8px 0 0 8px;border-right:none">
-          <span class="unit-badge">€</span>
-        </div>
-      </div>
-      <div style="display:flex;align-items:flex-end">
-        <button class="btn-remove" onclick="removeEinmal(${i})" title="Entfernen">×</button>
-      </div>
-    `;
-    container.appendChild(row);
-  });
+/* ============================================================
+   FORMATTERS
+============================================================ */
+function eur(v) {
+  return new Intl.NumberFormat('de-AT', { style:'currency', currency:'EUR', minimumFractionDigits:2 }).format(v);
 }
-
-function addEinmal()       { einmalData.push({ jahr: 0, betrag: 0 }); renderEinmal(); }
-function removeEinmal(i)   { einmalData.splice(i, 1); renderEinmal(); }
-renderEinmal();
-
-// ========================
-// CHART
-// ========================
-let myChart  = null;
-let lastData = null;
-let visibilityState = { flv: true, thes: true, ausch: true, einzahlt: true };
-
-const COLORS = { flv: '#4ade80', thes: '#60a5fa', ausch: '#fb923c', einzahlt: '#555860' };
-const LABELS = { flv: 'FLV Netto', thes: 'Depot Thesaurierend', ausch: 'Depot Ausschüttend', einzahlt: 'Eingezahltes Kapital' };
-
-function buildLegend() {
-  const legend = document.getElementById('legend');
-  legend.innerHTML = '';
-  Object.keys(COLORS).forEach(key => {
-    const item = document.createElement('div');
-    item.className = 'legend-item ' + (visibilityState[key] ? 'active' : 'inactive');
-    item.style.color = visibilityState[key] ? COLORS[key] : 'var(--text-muted)';
-    item.innerHTML = `<span class="legend-dot" style="background:${COLORS[key]}"></span>${LABELS[key]}`;
-    item.addEventListener('click', () => {
-      visibilityState[key] = !visibilityState[key];
-      if (myChart) {
-        const dsMap = { flv: 0, thes: 1, ausch: 2, einzahlt: 3 };
-        myChart.data.datasets[dsMap[key]].hidden = !visibilityState[key];
-        myChart.update();
-      }
-      buildLegend();
-    });
-    legend.appendChild(item);
-  });
+function eurShort(v) {
+  if (v >= 1e6) return (v/1e6).toFixed(2) + ' M€';
+  if (v >= 1e3) return (v/1e3).toFixed(0) + ' K€';
+  return v.toFixed(0) + ' €';
 }
-buildLegend();
-
 function getTC() {
   const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   return {
-    grid:   dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)',
-    ticks:  dark ? '#555860' : '#AAAAAA',
-    ttBg:   dark ? '#16171B' : '#F7F2EA',
-    ttBdr:  dark ? '#282930' : '#DEDAD3',
-    ttTitle:dark ? '#F0EDE8' : '#1A1A1A',
-    ttBody: '#969696'
+    grid: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)',
+    ticks: dark ? '#555860' : '#AAAAAA',
+    ttBg: dark ? '#16171B' : '#F7F2EA',
+    ttBdr: dark ? '#282930' : '#DEDAD3',
+    ttT: dark ? '#F0EDE8' : '#1A1A1A',
+    ttB: '#969696'
   };
 }
 
-function renderChart(data) {
-  if (myChart) myChart.destroy();
-  const tc  = getTC();
-  const ctx = document.getElementById('myChart').getContext('2d');
+/* ============================================================
+   KURZFRISTIG
+============================================================ */
+let kurzChart = null;
 
-  myChart = new Chart(ctx, {
+const KONTO_HINTS = {
+  tagesgeld: '<strong>Tagesgeld</strong>: täglich verfügbar, aktuell 2–4 % p.a. — ideal für den Notgroschen.',
+  festgeld:  '<strong>Festgeld</strong>: höhere Zinsen, aber Kapital für Laufzeit gebunden. Nur für Beträge über dem Notgroschen empfohlen.',
+  sparkonto: '<strong>Sparkonto</strong>: geringe Zinsen, aber flexibel. Weitgehend durch Einlagensicherung geschützt.',
+  girokonto: '<strong>Girokonto</strong>: keine Zinsen. Notgroschen hier parken ist suboptimal — Tagesgeld wäre besser.'
+};
+
+function updateKontoHint() {
+  document.getElementById('k_hint').innerHTML = KONTO_HINTS[document.getElementById('k_kontotyp').value];
+}
+
+function berechneKurz() {
+  const einkommen   = +document.getElementById('k_einkommen').value || 0;
+  const vorhandenes = +document.getElementById('k_vorhandenes').value || 0;
+  const monate      = +document.getElementById('k_monate').value || 3;
+  const sparrate    = +document.getElementById('k_sparrate').value || 0;
+  const zins_pa     = (+document.getElementById('k_zins').value || 0) / 100;
+  const ziel        = einkommen * monate;
+
+  const rows = [];
+  let kapital = vorhandenes, totalZins = 0, zielMonat = null;
+
+  for (let m = 1; m <= 120; m++) {
+    const zins = kapital * (zins_pa / 12);
+    totalZins += zins;
+    kapital += zins + sparrate;
+    const kappedKap = Math.min(kapital, ziel > 0 ? ziel * 1.5 : kapital);
+    rows.push({ monat: m, sparrate, zins, kapital: kappedKap, totalZins });
+    if (kapital >= ziel && zielMonat === null) zielMonat = m;
+    if (ziel > 0 && kapital >= ziel * 1.5) break;
+    if (ziel === 0) break;
+  }
+
+  // Metrics
+  document.getElementById('k_ziel').textContent    = eur(ziel);
+  document.getElementById('k_ziel_sub').textContent = `${monate}× Monatsnetto (${eur(einkommen)})`;
+
+  if (ziel === 0) {
+    document.getElementById('k_dauer').textContent = '—';
+    document.getElementById('k_dauer_sub').textContent = 'Einkommen eingeben';
+  } else if (sparrate === 0 && vorhandenes < ziel) {
+    document.getElementById('k_dauer').textContent = '∞';
+    document.getElementById('k_dauer_sub').textContent = 'Keine Sparrate eingetragen';
+  } else if (zielMonat) {
+    const j = Math.floor(zielMonat/12), mo = zielMonat%12;
+    const txt = j > 0 ? `${j} Jahr${j>1?'e':''} ${mo>0?mo+' Mo.':''}` : `${zielMonat} Monat${zielMonat>1?'e':''}`;
+    document.getElementById('k_dauer').textContent    = txt.trim();
+    document.getElementById('k_dauer_sub').textContent = `Erreicht in Monat ${zielMonat}`;
+  } else {
+    document.getElementById('k_dauer').textContent    = '> 10 J.';
+    document.getElementById('k_dauer_sub').textContent = 'Sparrate erhöhen empfohlen';
+  }
+
+  const zinsEnd = zielMonat ? rows[zielMonat-1]?.totalZins || 0 : rows[rows.length-1]?.totalZins || 0;
+  document.getElementById('k_zinsen').textContent = eur(zinsEnd);
+
+  // Progress
+  const pct = ziel > 0 ? Math.min(100, (vorhandenes/ziel)*100) : 0;
+  document.getElementById('k_prog_bar').style.width = pct + '%';
+  document.getElementById('k_prog_pct').textContent  = pct.toFixed(1) + ' % bereits erreicht';
+  document.getElementById('k_prog_start').textContent = `Vorhanden: ${eur(vorhandenes)}`;
+  document.getElementById('k_prog_end').textContent   = `Ziel: ${eur(ziel)}`;
+
+  // Chart
+  if (kurzChart) kurzChart.destroy();
+  const tc = getTC();
+  kurzChart = new Chart(document.getElementById('kurzChart').getContext('2d'), {
     type: 'line',
     data: {
-      labels: data.map(r => r.Jahr),
+      labels: rows.map(r => 'M' + r.monat),
       datasets: [
-        { label: LABELS.flv,      data: data.map(r => r.FLV_Netto),                 borderColor: COLORS.flv,      backgroundColor: 'rgba(74,222,128,0.05)',  borderWidth: 2.5, tension: 0.4, pointRadius: 0, pointHoverRadius: 4, fill: false, hidden: !visibilityState.flv },
-        { label: LABELS.thes,     data: data.map(r => r.Depot_Thesaurierend_Netto),  borderColor: COLORS.thes,     backgroundColor: 'rgba(96,165,250,0.05)',   borderWidth: 2.5, tension: 0.4, pointRadius: 0, pointHoverRadius: 4, fill: false, hidden: !visibilityState.thes },
-        { label: LABELS.ausch,    data: data.map(r => r.Depot_Ausschuettend_Netto),  borderColor: COLORS.ausch,    backgroundColor: 'rgba(251,146,60,0.05)',   borderWidth: 2,   borderDash: [5,3], tension: 0.4, pointRadius: 0, pointHoverRadius: 4, fill: false, hidden: !visibilityState.ausch },
-        { label: LABELS.einzahlt, data: data.map(r => r.Eingezahlt),                 borderColor: COLORS.einzahlt, backgroundColor: 'transparent',            borderWidth: 1.5, borderDash: [6,4], tension: 0, pointRadius: 0, fill: false, hidden: !visibilityState.einzahlt }
+        { label:'Kapital', data:rows.map(r=>r.kapital), borderColor:'#38D9A3', backgroundColor:'rgba(56,217,163,0.07)', borderWidth:2.5, tension:0.4, pointRadius:0, fill:true },
+        { label:`Ziel (${eur(ziel)})`, data:rows.map(()=>ziel), borderColor:'#f87171', borderDash:[6,3], borderWidth:1.5, pointRadius:0, fill:false }
       ]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: tc.ttBg, borderColor: tc.ttBdr, borderWidth: 1,
-          padding: 12, titleColor: tc.ttTitle, bodyColor: tc.ttBody,
-          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${formatEur(ctx.parsed.y)}` }
-        }
-      },
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:tc.ttBg, borderColor:tc.ttBdr, borderWidth:1, padding:10, titleColor:tc.ttT, bodyColor:tc.ttB, callbacks:{label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`} } },
       scales: {
-        x: { grid: { color: tc.grid, drawTicks: false }, ticks: { color: tc.ticks, font: { size: 11, family: 'Inter' }, maxTicksLimit: 10 }, border: { color: 'transparent' } },
-        y: { grid: { color: tc.grid, drawTicks: false }, ticks: { color: tc.ticks, font: { size: 11, family: 'Inter' }, callback: v => formatEurShort(v) }, border: { color: 'transparent' } }
+        x:{ grid:{color:tc.grid,drawTicks:false}, ticks:{color:tc.ticks,font:{size:10},maxTicksLimit:12}, border:{color:'transparent'} },
+        y:{ grid:{color:tc.grid,drawTicks:false}, ticks:{color:tc.ticks,font:{size:10},callback:v=>eurShort(v)}, border:{color:'transparent'} }
       }
     }
   });
-}
 
-// ========================
-// MATH (1:1 from Python)
-// ========================
-function berechne() {
-  const monatsbeitrag  = parseFloat(document.getElementById('monatsbeitrag').value);
-  const laufzeit_jahre = parseInt(document.getElementById('laufzeit').value);
-  const rendite_pa     = parseFloat(document.getElementById('rendite').value) / 100;
-  const einmaleinlagen = einmalData.map(e => ({ jahr: parseInt(e.jahr), betrag: parseFloat(e.betrag) || 0 }));
-
-  const flv_params = {
-    agio_einmal:            parseFloat(document.getElementById('flv_agio').value) / 100,
-    laufende_kosten_einmal: parseFloat(document.getElementById('flv_kosten').value) / 100
-  };
-
-  const depot_params = {
-    agio:           parseFloat(document.getElementById('depot_agio').value) / 100,
-    order_sparplan: parseFloat(document.getElementById('depot_sparplan').value),
-    order_einmal:   parseFloat(document.getElementById('depot_einzel').value),
-    ter:            parseFloat(document.getElementById('depot_ter').value) / 100,
-    kest:           parseFloat(document.getElementById('depot_kest').value) / 100,
-    div_rendite:    parseFloat(document.getElementById('depot_div').value) / 100,
-    anteil_age:     parseFloat(document.getElementById('depot_age').value) / 100
-  };
-
-  const data = berechneVergleich(monatsbeitrag, laufzeit_jahre, rendite_pa, einmaleinlagen, flv_params, depot_params);
-  lastData = data;
-
-  renderChart(data);
-  renderTable(data);
-  renderSummary(data);
-  renderInsights(data);
-  buildLegend();
-}
-
-function berechneVergleich(monatsbeitrag, laufzeit_jahre, rendite_pa, einmaleinlagen, flv_params, depot_params) {
-  const ref_rendite = 0.06;
-  const q_ref = Math.pow(1 + ref_rendite, 1/12);
-
-  function rentenwert_ref(m_rate, n_monate) {
-    if (Math.abs(ref_rendite) < 1e-8) return m_rate * n_monate;
-    return m_rate * ((Math.pow(q_ref, n_monate) - 1) / (q_ref - 1));
-  }
-
-  const basis_100_anker = { 0:0.0, 1:618.06, 2:1270.27, 3:1961.42, 4:2693.89, 5:3470.10, 10:11062.82, 15:21209.92, 20:34766.96, 25:52875.92, 30:77060.00, 35:109352.45, 40:152464.60 };
-  const basis_500_anker = { 0:0.0, 1:3204.64, 2:6597.50, 3:10192.99, 4:14003.30, 5:18041.10, 10:56149.33, 15:108933.69, 20:178401.14, 25:271203.42, 30:395157.38, 35:560699.45 };
-
-  const q_flv   = Math.pow(1 + rendite_pa, 1/12);
-  const q_depot = Math.pow(1 + rendite_pa - depot_params.ter, 1/12);
-
-  function rentenwert_flv(m_rate, n_monate) {
-    if (Math.abs(rendite_pa) < 1e-8) return m_rate * n_monate;
-    return m_rate * ((Math.pow(q_flv, n_monate) - 1) / (q_flv - 1));
-  }
-
-  const ergebnisse = [];
-  let kum_einmalzahlungen = 0, kapital_flv_monatlich = 0.0;
-  let kapital_t_brutto = 0.0, basis_t = 0.0, kapital_a_brutto = 0.0, basis_a = 0.0;
-
-  for (const anlage of einmaleinlagen) {
-    if (anlage.jahr <= 0) {
-      kum_einmalzahlungen += anlage.betrag;
-      basis_t += anlage.betrag; basis_a += anlage.betrag;
-      const netto = Math.max(0, anlage.betrag * (1 - depot_params.agio) - depot_params.order_einmal);
-      kapital_t_brutto += netto; kapital_a_brutto += netto;
-    }
-  }
-
-  for (let jahr = 1; jahr <= laufzeit_jahre; jahr++) {
-    let block_start, block_end, anzahl_monate;
-    if (jahr <= 5) {
-      block_start = jahr - 1; block_end = jahr; anzahl_monate = 12;
-    } else {
-      block_start = Math.floor((jahr - 1) / 5) * 5;
-      block_end = block_start + 5; anzahl_monate = 60;
-    }
-
-    const ks100 = basis_100_anker[block_start], ke100 = basis_100_anker[block_end];
-    const ks500 = basis_500_anker[block_start], ke500 = basis_500_anker[block_end];
-
-    function calc_m_rate(ks, ke) {
-      return (ke - ks * Math.pow(q_ref, anzahl_monate)) / rentenwert_ref(1, anzahl_monate);
-    }
-
-    let m_100, m_500;
-    if (ke100 !== undefined && ke500 !== undefined) {
-      m_100 = calc_m_rate(ks100, ke100); m_500 = calc_m_rate(ks500, ke500);
-    } else {
-      m_100 = calc_m_rate(basis_100_anker[35], basis_100_anker[40]);
-      m_500 = calc_m_rate(basis_500_anker[30], basis_500_anker[35]);
-    }
-
-    const m_aktuell = m_100 + (m_500 - m_100) * ((monatsbeitrag - 100) / 400.0);
-    kapital_flv_monatlich = kapital_flv_monatlich * Math.pow(q_flv, 12) + rentenwert_flv(m_aktuell, 12);
-
-    let kapital_flv_einmal = 0;
-    for (const anlage of einmaleinlagen) {
-      if (anlage.jahr === jahr) {
-        kum_einmalzahlungen += anlage.betrag;
-        basis_t += anlage.betrag; basis_a += anlage.betrag;
-        const netto = Math.max(0, anlage.betrag * (1 - depot_params.agio) - depot_params.order_einmal);
-        kapital_t_brutto += netto; kapital_a_brutto += netto;
-      }
-      if (jahr >= anlage.jahr) {
-        const jsa = anlage.jahr > 0 ? (jahr - anlage.jahr + 1) : jahr;
-        kapital_flv_einmal += anlage.betrag * (1 - flv_params.agio_einmal)
-          * Math.pow(1 - flv_params.laufende_kosten_einmal, jsa)
-          * Math.pow(1 + rendite_pa, jsa);
-      }
-    }
-
-    for (let m = 1; m <= 12; m++) {
-      basis_t += monatsbeitrag; basis_a += monatsbeitrag;
-      const ns = Math.max(0, monatsbeitrag * (1 - depot_params.agio) - depot_params.order_sparplan);
-      kapital_t_brutto += ns; kapital_a_brutto += ns;
-      kapital_t_brutto *= q_depot; kapital_a_brutto *= q_depot;
-    }
-
-    const th_ertrag = kapital_t_brutto * depot_params.div_rendite;
-    const steuer_t  = th_ertrag * depot_params.anteil_age * depot_params.kest;
-    kapital_t_brutto -= steuer_t;
-    basis_t += th_ertrag * depot_params.anteil_age;
-
-    const div_a    = kapital_a_brutto * depot_params.div_rendite;
-    const steuer_a = div_a * depot_params.kest;
-    kapital_a_brutto -= steuer_a;
-    basis_a += div_a - steuer_a;
-
-    const flv_netto           = kapital_flv_monatlich + kapital_flv_einmal;
-    const depot_thesaur_netto = kapital_t_brutto - Math.max(0, kapital_t_brutto - basis_t) * depot_params.kest;
-    const depot_aussch_netto  = kapital_a_brutto - Math.max(0, kapital_a_brutto - basis_a) * depot_params.kest;
-
-    ergebnisse.push({
-      Jahr: jahr,
-      Eingezahlt: monatsbeitrag * (jahr * 12) + kum_einmalzahlungen,
-      FLV_Netto: flv_netto,
-      Depot_Thesaurierend_Netto: depot_thesaur_netto,
-      Depot_Ausschuettend_Netto: depot_aussch_netto
-    });
-  }
-  return ergebnisse;
-}
-
-// ========================
-// RENDER HELPERS
-// ========================
-function formatEur(v) {
-  return new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(v);
-}
-
-function formatEurShort(v) {
-  if (v >= 1e6) return (v / 1e6).toFixed(1) + ' M€';
-  if (v >= 1e3) return (v / 1e3).toFixed(0) + ' K€';
-  return v.toFixed(0) + ' €';
-}
-
-function renderSummary(data) {
-  const last = data[data.length - 1];
-  document.getElementById('sum-flv').textContent   = formatEur(last.FLV_Netto);
-  document.getElementById('sum-thes').textContent  = formatEur(last.Depot_Thesaurierend_Netto);
-  document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('highlight'));
-  const idx = last.FLV_Netto >= last.Depot_Thesaurierend_Netto ? 0 : 1;
-  document.querySelectorAll('.summary-card')[idx].classList.add('highlight');
-}
-
-function renderInsights(data) {
-  const last = data[data.length - 1];
-
-  // Break-even vs Thesaurierend
-  let beThes = null;
-  for (let i = 0; i < data.length; i++) {
-    if (data[i].FLV_Netto >= data[i].Depot_Thesaurierend_Netto) { beThes = data[i].Jahr; break; }
-  }
-  if (beThes !== null) {
-    document.getElementById('breakeven-thes').textContent = 'Jahr ' + beThes;
-    document.getElementById('breakeven-thes-sub').textContent = `FLV überholt Thesaurierend ab Jahr ${beThes}`;
-  } else {
-    document.getElementById('breakeven-thes').textContent = 'Nie';
-    document.getElementById('breakeven-thes-sub').textContent = 'FLV überholt Thesaurierend nicht innerhalb der Laufzeit';
-  }
-
-  // Break-even vs Ausschüttend
-  let beAusch = null;
-  for (let i = 0; i < data.length; i++) {
-    if (data[i].FLV_Netto >= data[i].Depot_Ausschuettend_Netto) { beAusch = data[i].Jahr; break; }
-  }
-  if (beAusch !== null) {
-    document.getElementById('breakeven-ausch').textContent = 'Jahr ' + beAusch;
-    document.getElementById('breakeven-ausch-sub').textContent = `FLV überholt Ausschüttend ab Jahr ${beAusch}`;
-  } else {
-    document.getElementById('breakeven-ausch').textContent = 'Nie';
-    document.getElementById('breakeven-ausch-sub').textContent = 'FLV überholt Ausschüttend nicht innerhalb der Laufzeit';
-  }
-
-  // Delta FLV vs best depot
-  const bestDepot = Math.max(last.Depot_Thesaurierend_Netto, last.Depot_Ausschuettend_Netto);
-  const bestName  = last.Depot_Thesaurierend_Netto >= last.Depot_Ausschuettend_Netto ? 'Thesaurierend' : 'Ausschüttend';
-  const delta = last.FLV_Netto - bestDepot;
-  const el    = document.getElementById('delta-best');
-  el.textContent = (delta >= 0 ? '+' : '') + formatEur(delta);
-  el.className   = 'insight-value ' + (delta >= 0 ? 'positive' : 'negative');
-  document.getElementById('delta-best-sub').textContent = delta >= 0
-    ? `FLV schlägt das beste Depot (${bestName}) um ${formatEur(delta)}`
-    : `Depot ${bestName} schlägt die FLV um ${formatEur(Math.abs(delta))}`;
-}
-
-function renderTable(data) {
-  const tbody = document.getElementById('table-body');
+  // Table
+  const tbody = document.getElementById('kurz-table');
   tbody.innerHTML = '';
-  data.forEach(r => {
+  const showUntil = Math.min(rows.length, (zielMonat||36)+2);
+  for (let i=0; i<showUntil; i++) {
+    const r = rows[i];
+    const fehlend = Math.max(0, ziel - r.kapital);
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${r.Jahr}</td>
-      <td>${formatEur(r.Eingezahlt)}</td>
-      <td class="td-green">${formatEur(r.FLV_Netto)}</td>
-      <td class="td-blue">${formatEur(r.Depot_Thesaurierend_Netto)}</td>
-      <td class="td-orange">${formatEur(r.Depot_Ausschuettend_Netto)}</td>
-    `;
+    tr.innerHTML = `<td>${r.monat}</td><td>${eur(r.sparrate)}</td><td style="color:#38D9A3">${eur(r.zins)}</td><td style="color:${r.kapital>=ziel?'#4ade80':'var(--ts)'}">${eur(r.kapital)}</td><td style="color:${fehlend===0?'#4ade80':'var(--ts)'}">${fehlend===0?'✓ Erreicht':eur(fehlend)}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+/* ============================================================
+   MITTELFRISTIG
+============================================================ */
+let mittelChart = null;
+let mVis = { fonds:true, tages:true, einzahlt:true };
+
+function berechneMittel() {
+  const ziel    = +document.getElementById('m_ziel').value || 0;
+  const start   = +document.getElementById('m_start').value || 0;
+  const jahre   = +document.getElementById('m_jahre').value || 5;
+  const sparrate = +document.getElementById('m_sparrate').value || 0;
+  const rendite = (+document.getElementById('m_rendite').value||0)/100;
+  const ter     = (+document.getElementById('m_ter').value||0)/100;
+  const order   = +document.getElementById('m_order').value || 0;
+  const kest    = (+document.getElementById('m_kest').value||0)/100;
+  const tzins   = (+document.getElementById('m_tzins').value||0)/100;
+  const tkest   = (+document.getElementById('m_tkest').value||0)/100;
+  const name    = document.getElementById('m_name').value || 'Sparziel';
+
+  const qf = Math.pow(1 + rendite - ter, 1/12);
+
+  function calcFonds(rate, j) {
+    let k = start, b = start;
+    for (let m=1; m<=j*12; m++) {
+      const ns = Math.max(0, rate - order);
+      k += ns; b += rate; k *= qf;
+    }
+    return k - Math.max(0, k-b)*kest;
+  }
+
+  // Binary search for required rate
+  function findRate(target) {
+    if (calcFonds(0, jahre) >= target) return 0;
+    let lo=0, hi=target/12;
+    for (let i=0;i<80;i++) {
+      const mid=(lo+hi)/2;
+      if (calcFonds(mid,jahre)<target) lo=mid; else hi=mid;
+    }
+    return (lo+hi)/2;
+  }
+
+  const neededRate = findRate(ziel);
+  document.getElementById('m_needed').textContent = eur(neededRate) + ' / Mo.';
+
+  // Hint
+  const diff = sparrate - neededRate;
+  if (Math.abs(diff) < 1) {
+    document.getElementById('m_hint').innerHTML = `<strong>Perfekt!</strong> Deine Sparrate trifft das Ziel exakt.`;
+  } else if (diff > 0) {
+    document.getElementById('m_hint').innerHTML = `<strong>+${eur(diff)}/Mo.</strong> über der benötigten Rate — du erreichst das Ziel früher oder mit mehr.`;
+  } else {
+    document.getElementById('m_hint').innerHTML = `Benötigte Rate: <strong>${eur(neededRate)}/Mo.</strong> — aktuell <strong>${eur(Math.abs(diff))}/Mo.</strong> zu wenig.`;
+  }
+
+  // Build yearly data
+  const rows = [];
+  let kf = start, bf = start;
+  let kt = start;
+
+  for (let j=1; j<=jahre; j++) {
+    for (let m=1; m<=12; m++) {
+      const ns = Math.max(0, sparrate - order);
+      kf += ns; bf += sparrate; kf *= qf;
+      const zins = kt * (tzins/12);
+      kt += sparrate + zins - zins*tkest;
+    }
+    const fondsNetto = kf - Math.max(0, kf-bf)*kest;
+    rows.push({ jahr:j, einzahlt: start + sparrate*j*12, fonds: fondsNetto, tages: kt });
+  }
+
+  const last = rows[rows.length-1];
+  document.getElementById('m_ziel_show').textContent = eur(ziel);
+  document.getElementById('m_ziel_name').textContent  = name;
+  document.getElementById('m_fonds_end').textContent  = eur(last.fonds);
+  document.getElementById('m_tages_end').textContent  = eur(last.tages);
+  document.getElementById('m_fonds_sub').textContent  = last.fonds >= ziel ? '✓ Ziel erreicht!' : `Lücke: ${eur(ziel - last.fonds)}`;
+
+  const delta = last.fonds - last.tages;
+  const dEl   = document.getElementById('m_delta');
+  dEl.textContent = (delta>=0?'+':'') + eur(delta);
+  dEl.className   = 'metric-value ' + (delta>=0?'pos':'neg');
+  document.getElementById('m_delta_sub').textContent = delta>=0
+    ? `Fonds bringt ${eur(delta)} mehr als Tagesgeld`
+    : `Tagesgeld bringt ${eur(Math.abs(delta))} mehr als Fonds`;
+
+  // Chart
+  if (mittelChart) mittelChart.destroy();
+  const tc = getTC();
+  const MC = { fonds:'#60a5fa', tages:'#4ade80', einzahlt:'#555860' };
+
+  mittelChart = new Chart(document.getElementById('mittelChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: rows.map(r=>'Jahr '+r.jahr),
+      datasets: [
+        { label:'Fonds (netto)',     data:rows.map(r=>r.fonds),   borderColor:MC.fonds,   backgroundColor:'rgba(96,165,250,0.06)', borderWidth:2.5, tension:0.4, pointRadius:0, fill:false, hidden:!mVis.fonds },
+        { label:'Tagesgeld (netto)', data:rows.map(r=>r.tages),   borderColor:MC.tages,   backgroundColor:'rgba(74,222,128,0.06)', borderWidth:2.5, tension:0.4, pointRadius:0, fill:false, hidden:!mVis.tages },
+        { label:'Eingezahlt',        data:rows.map(r=>r.einzahlt),borderColor:MC.einzahlt,borderDash:[5,3], borderWidth:1.5, tension:0, pointRadius:0, fill:false, hidden:!mVis.einzahlt },
+        { label:'Ziel: '+name,       data:rows.map(()=>ziel),      borderColor:'#f87171',  borderDash:[6,3], borderWidth:1.5, pointRadius:0, fill:false }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:tc.ttBg, borderColor:tc.ttBdr, borderWidth:1, padding:10, titleColor:tc.ttT, bodyColor:tc.ttB, callbacks:{label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`} } },
+      scales: {
+        x:{ grid:{color:tc.grid,drawTicks:false}, ticks:{color:tc.ticks,font:{size:11}}, border:{color:'transparent'} },
+        y:{ grid:{color:tc.grid,drawTicks:false}, ticks:{color:tc.ticks,font:{size:11},callback:v=>eurShort(v)}, border:{color:'transparent'} }
+      }
+    }
+  });
+
+  // Legend
+  const lg = document.getElementById('m_legend');
+  lg.innerHTML = '';
+  [['fonds','#60a5fa','Fonds'],['tages','#4ade80','Tagesgeld'],['einzahlt','#555860','Eingezahlt']].forEach(([key,col,lbl])=>{
+    const item = document.createElement('div');
+    item.className = 'legend-item ' + (mVis[key]?'active':'inactive');
+    item.style.color = mVis[key] ? col : 'var(--tm)';
+    item.innerHTML = `<span class="legend-dot" style="background:${col}"></span>${lbl}`;
+    item.onclick = () => {
+      mVis[key] = !mVis[key];
+      const dsMap = { fonds:0,tages:1,einzahlt:2 };
+      mittelChart.data.datasets[dsMap[key]].hidden = !mVis[key];
+      mittelChart.update();
+      berechneMittel();
+    };
+    lg.appendChild(item);
+  });
+
+  // Table
+  const tbody = document.getElementById('mittel-table');
+  tbody.innerHTML = '';
+  rows.forEach(r=>{
+    const lucke = Math.max(0, ziel-r.fonds);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.jahr}</td><td>${eur(r.einzahlt)}</td><td style="color:#60a5fa">${eur(r.fonds)}</td><td style="color:#4ade80">${eur(r.tages)}</td><td style="color:${lucke===0?'#4ade80':'var(--ts)'}">${lucke===0?'✓ Erreicht':eur(lucke)}</td>`;
     tbody.appendChild(tr);
   });
 }
 
-window.addEventListener('DOMContentLoaded', () => berechne());
+/* ============================================================
+   LANGFRISTIG — FLV vs DEPOT (1:1 Python math)
+============================================================ */
+let langChart = null;
+let lVis = { flv:true, thes:true, ausch:true, einzahlt:true };
+let einmalData = [{ jahr:0,betrag:0},{jahr:1,betrag:0},{jahr:2,betrag:0}];
+
+function renderEinmal() {
+  const c = document.getElementById('einmal-container');
+  c.innerHTML = '';
+  einmalData.forEach((e,i)=>{
+    const row = document.createElement('div');
+    row.className = 'einmal-row';
+    row.innerHTML = `
+      <div>${i===0?'<label>Jahr</label>':'<label style="visibility:hidden">J</label>'}
+        <div class="field-unit"><input type="number" value="${e.jahr}" min="0" onchange="einmalData[${i}].jahr=+this.value" style="border-radius:8px 0 0 8px;border-right:none"><span class="unit-badge">J.</span></div></div>
+      <div>${i===0?'<label>Betrag</label>':'<label style="visibility:hidden">B</label>'}
+        <div class="field-unit"><input type="number" value="${e.betrag}" min="0" step="100" onchange="einmalData[${i}].betrag=+this.value" style="border-radius:8px 0 0 8px;border-right:none"><span class="unit-badge">€</span></div></div>
+      <div style="display:flex;align-items:flex-end"><button class="btn-remove" onclick="removeEinmal(${i})">×</button></div>`;
+    c.appendChild(row);
+  });
+}
+function addEinmal()     { einmalData.push({jahr:0,betrag:0}); renderEinmal(); }
+function removeEinmal(i) { einmalData.splice(i,1); renderEinmal(); }
+renderEinmal();
+
+const LC = { flv:'#4ade80', thes:'#60a5fa', ausch:'#fb923c', einzahlt:'#555860' };
+const LL = { flv:'FLV Netto', thes:'Depot Thesaurierend', ausch:'Depot Ausschüttend', einzahlt:'Eingezahlt' };
+
+function buildLangLegend() {
+  const lg = document.getElementById('l_legend');
+  lg.innerHTML = '';
+  Object.keys(LC).forEach(key=>{
+    const item = document.createElement('div');
+    item.className = 'legend-item '+(lVis[key]?'active':'inactive');
+    item.style.color = lVis[key] ? LC[key] : 'var(--tm)';
+    item.innerHTML = `<span class="legend-dot" style="background:${LC[key]}"></span>${LL[key]}`;
+    item.onclick = ()=>{
+      lVis[key]=!lVis[key];
+      const dm={flv:0,thes:1,ausch:2,einzahlt:3};
+      if(langChart){langChart.data.datasets[dm[key]].hidden=!lVis[key];langChart.update();}
+      buildLangLegend();
+    };
+    lg.appendChild(item);
+  });
+}
+
+function berechneLang() {
+  const mb  = +document.getElementById('l_mb').value;
+  const lj  = +document.getElementById('l_lj').value;
+  const rpa = (+document.getElementById('l_rpa').value)/100;
+  const einmal = einmalData.map(e=>({jahr:+e.jahr,betrag:+e.betrag||0}));
+  const flv  = { agio_einmal:+document.getElementById('l_flv_agio').value/100, laufende_kosten_einmal:+document.getElementById('l_flv_kosten').value/100 };
+  const depot= { agio:+document.getElementById('l_d_agio').value/100, order_sparplan:+document.getElementById('l_d_sparplan').value, order_einmal:+document.getElementById('l_d_einzel').value, ter:+document.getElementById('l_d_ter').value/100, kest:+document.getElementById('l_d_kest').value/100, div_rendite:+document.getElementById('l_d_div').value/100, anteil_age:+document.getElementById('l_d_age').value/100 };
+
+  const data = calcFLV(mb,lj,rpa,einmal,flv,depot);
+
+  if (langChart) langChart.destroy();
+  const tc = getTC();
+  langChart = new Chart(document.getElementById('langChart').getContext('2d'),{
+    type:'line',
+    data:{ labels:data.map(r=>r.Jahr), datasets:[
+      {label:LL.flv,   data:data.map(r=>r.FLV_Netto),                borderColor:LC.flv,  backgroundColor:'rgba(74,222,128,0.05)', borderWidth:2.5,tension:0.4,pointRadius:0,fill:false,hidden:!lVis.flv},
+      {label:LL.thes,  data:data.map(r=>r.Depot_Thesaurierend_Netto), borderColor:LC.thes, backgroundColor:'rgba(96,165,250,0.05)', borderWidth:2.5,tension:0.4,pointRadius:0,fill:false,hidden:!lVis.thes},
+      {label:LL.ausch, data:data.map(r=>r.Depot_Ausschuettend_Netto), borderColor:LC.ausch,borderDash:[5,3],borderWidth:2,tension:0.4,pointRadius:0,fill:false,hidden:!lVis.ausch},
+      {label:LL.einzahlt,data:data.map(r=>r.Eingezahlt),             borderColor:LC.einzahlt,borderDash:[6,4],borderWidth:1.5,tension:0,pointRadius:0,fill:false,hidden:!lVis.einzahlt}
+    ]},
+    options:{ responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:tc.ttBg,borderColor:tc.ttBdr,borderWidth:1,padding:12,titleColor:tc.ttT,bodyColor:tc.ttB,callbacks:{label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      scales:{
+        x:{grid:{color:tc.grid,drawTicks:false},ticks:{color:tc.ticks,font:{size:11},maxTicksLimit:10},border:{color:'transparent'}},
+        y:{grid:{color:tc.grid,drawTicks:false},ticks:{color:tc.ticks,font:{size:11},callback:v=>eurShort(v)},border:{color:'transparent'}}
+      }
+    }
+  });
+  buildLangLegend();
+
+  const last = data[data.length-1];
+  document.getElementById('l_sum_flv').textContent  = eur(last.FLV_Netto);
+  document.getElementById('l_sum_thes').textContent = eur(last.Depot_Thesaurierend_Netto);
+
+  let beT=null,beA=null;
+  for(let i=0;i<data.length;i++){
+    if(!beT&&data[i].FLV_Netto>=data[i].Depot_Thesaurierend_Netto) beT=data[i].Jahr;
+    if(!beA&&data[i].FLV_Netto>=data[i].Depot_Ausschuettend_Netto)  beA=data[i].Jahr;
+  }
+  document.getElementById('l_be_thes').textContent     = beT?'Jahr '+beT:'Nie';
+  document.getElementById('l_be_thes_sub').textContent = beT?`FLV überholt Thesaurierend ab Jahr ${beT}`:'FLV überholt Depot in dieser Laufzeit nicht';
+  document.getElementById('l_be_ausch').textContent    = beA?'Jahr '+beA:'Nie';
+  document.getElementById('l_be_ausch_sub').textContent= beA?`FLV überholt Ausschüttend ab Jahr ${beA}`:'FLV überholt Depot in dieser Laufzeit nicht';
+
+  const bestD = Math.max(last.Depot_Thesaurierend_Netto,last.Depot_Ausschuettend_Netto);
+  const bestN = last.Depot_Thesaurierend_Netto>=last.Depot_Ausschuettend_Netto?'Thesaurierend':'Ausschüttend';
+  const delta = last.FLV_Netto - bestD;
+  const dEl   = document.getElementById('l_delta');
+  dEl.textContent = (delta>=0?'+':'')+eur(delta);
+  dEl.className   = 'metric-value '+(delta>=0?'pos':'neg');
+  document.getElementById('l_delta_sub').textContent = delta>=0
+    ?`FLV schlägt das beste Depot (${bestN}) um ${eur(delta)}`
+    :`Depot ${bestN} schlägt die FLV um ${eur(Math.abs(delta))}`;
+
+  const tbody = document.getElementById('lang-table');
+  tbody.innerHTML = '';
+  data.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r.Jahr}</td><td>${eur(r.Eingezahlt)}</td><td style="color:#4ade80">${eur(r.FLV_Netto)}</td><td style="color:#60a5fa">${eur(r.Depot_Thesaurierend_Netto)}</td><td style="color:#fb923c">${eur(r.Depot_Ausschuettend_Netto)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ============================================================
+   FLV MATH — 1:1 from Python
+============================================================ */
+function calcFLV(mb,lj,rpa,einmal,flv,depot){
+  const ref=0.06,qr=Math.pow(1+ref,1/12);
+  function rwr(m,n){return Math.abs(ref)<1e-8?m*n:m*((Math.pow(qr,n)-1)/(qr-1));}
+  const b100={0:0,1:618.06,2:1270.27,3:1961.42,4:2693.89,5:3470.10,10:11062.82,15:21209.92,20:34766.96,25:52875.92,30:77060,35:109352.45,40:152464.60};
+  const b500={0:0,1:3204.64,2:6597.50,3:10192.99,4:14003.30,5:18041.10,10:56149.33,15:108933.69,20:178401.14,25:271203.42,30:395157.38,35:560699.45};
+  const qf=Math.pow(1+rpa,1/12),qd=Math.pow(1+rpa-depot.ter,1/12);
+  function rwf(m,n){return Math.abs(rpa)<1e-8?m*n:m*((Math.pow(qf,n)-1)/(qf-1));}
+  const res=[];let kum=0,flvM=0,kt=0,bt=0,ka=0,ba=0;
+  for(const a of einmal)if(a.jahr<=0){kum+=a.betrag;bt+=a.betrag;ba+=a.betrag;const n=Math.max(0,a.betrag*(1-depot.agio)-depot.order_einmal);kt+=n;ka+=n;}
+  for(let j=1;j<=lj;j++){
+    let bs,be,am;
+    if(j<=5){bs=j-1;be=j;am=12;}else{bs=Math.floor((j-1)/5)*5;be=bs+5;am=60;}
+    function mr(ks,ke){return(ke-ks*Math.pow(qr,am))/rwr(1,am);}
+    let m100,m500;
+    if(b100[be]!==undefined&&b500[be]!==undefined){m100=mr(b100[bs],b100[be]);m500=mr(b500[bs],b500[be]);}
+    else{m100=mr(b100[35],b100[40]);m500=mr(b500[30],b500[35]);}
+    const ma=m100+(m500-m100)*((mb-100)/400);
+    flvM=flvM*Math.pow(qf,12)+rwf(ma,12);
+    let flvE=0;
+    for(const a of einmal){
+      if(a.jahr===j){kum+=a.betrag;bt+=a.betrag;ba+=a.betrag;const n=Math.max(0,a.betrag*(1-depot.agio)-depot.order_einmal);kt+=n;ka+=n;}
+      if(j>=a.jahr){const jsa=a.jahr>0?(j-a.jahr+1):j;flvE+=a.betrag*(1-flv.agio_einmal)*Math.pow(1-flv.laufende_kosten_einmal,jsa)*Math.pow(1+rpa,jsa);}
+    }
+    for(let m=1;m<=12;m++){bt+=mb;ba+=mb;const ns=Math.max(0,mb*(1-depot.agio)-depot.order_sparplan);kt+=ns;ka+=ns;kt*=qd;ka*=qd;}
+    const te=kt*depot.div_rendite,st=te*depot.anteil_age*depot.kest;kt-=st;bt+=te*depot.anteil_age;
+    const da=ka*depot.div_rendite,sa=da*depot.kest;ka-=sa;ba+=da-sa;
+    const fn=flvM+flvE,tn=kt-Math.max(0,kt-bt)*depot.kest,an=ka-Math.max(0,ka-ba)*depot.kest;
+    res.push({Jahr:j,Eingezahlt:mb*(j*12)+kum,FLV_Netto:fn,Depot_Thesaurierend_Netto:tn,Depot_Ausschuettend_Netto:an});
+  }
+  return res;
+}
+
+/* ============================================================
+   INIT — auto-calculate all on load
+============================================================ */
+window.addEventListener('DOMContentLoaded', ()=>{
+  berechneKurz();
+  berechneMittel();
+  berechneLang();
+  buildLangLegend();
+  syncDash();
+});
 </script>
 </body>
 </html>
