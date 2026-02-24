@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment-Rechner | jasonschreiber.at</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & Babel für In-Browser JSX (einfachste Lösung für GitHub Pages) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Recharts (Visualisierung) -->
+    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide-react@latest"></script>
+
+    <style>
+        body { background-color: #f8fafc; }
+        /* Custom Styling für Slider */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 0 2px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+        const { 
+            ResponsiveContainer, ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend 
+        } = Recharts;
+        const { 
+            Info, Euro, TrendingUp, ShieldCheck, Wallet, ChevronDown, ChevronUp, Settings2, Eye, EyeOff, BarChart3, Clock 
+        } = lucideReact;
+
+        const App = () => {
+            // --- PARAMETER AUS PYTHON SKRIPT ---
+            const [monatsbeitrag, setMonatsbeitrag] = useState(300);
+            const [laufzeit, setLaufzeit] = useState(35);
+            const [rendite, setRendite] = useState(7);
+            
+            const [showSonderzahlungen, setShowSonderzahlungen] = useState(false);
+            const [showExpert, setShowExpert] = useState(false);
+            const [visibleSeries, setVisibleSeries] = useState({ 
+                flv: true, depot_t: true, depot_a: true, eingezahlt: true 
+            });
+
+            const [einmalzahlungen, setEinmalzahlungen] = useState([
+                { jahr: 0, betrag: 0 }, { jahr: 1, betrag: 0 }, { jahr: 2, betrag: 0 }
+            ]);
+
+            const [flvAgioEinmal, setFlvAgioEinmal] = useState(7.65);
+            const [flvKostenEinmal, setFlvKostenEinmal] = useState(0.61);
+            const [depotAgio, setDepotAgio] = useState(4.0);
+            const [depotOrderSpar, setDepotOrderSpar] = useState(1.50);
+            const [depotOrderEinmal, setDepotOrderEinmal] = useState(5.90);
+            const [depotTer, setDepotTer] = useState(0.3);
+            const [depotKest, setDepotKest] = useState(27.5);
+            const [depotDiv, setDepotDiv] = useState(2.0);
+            const [depotAge, setDepotAge] = useState(60);
+
+            const basis_100_anker = { 0: 0, 1: 618.06, 2: 1270.27, 3: 1961.42, 4: 2693.89, 5: 3470.10, 10: 11062.82, 15: 21209.92, 20: 34766.96, 25: 52875.92, 30: 77060.00, 35: 109352.45, 40: 152464.60 };
+            const basis_500_anker = { 0: 0, 1: 3204.64, 2: 6597.50, 3: 10192.99, 4: 14003.30, 5: 18041.10, 10: 56149.33, 15: 108933.69, 20: 178401.14, 25: 271203.42, 30: 395157.38, 35: 560699.45 };
+
+            const { data, breakEvenYear, breakEvenDepotYear } = useMemo(() => {
+                const results = [];
+                const rendite_pa = rendite / 100;
+                const ref_rendite = 0.06;
+                const q_ref = Math.pow(1 + ref_rendite, 1/12);
+                const q_flv = Math.pow(1 + rendite_pa, 1/12);
+                const eff_zins_depot = rendite_pa - (depotTer / 100);
+                const q_depot = Math.pow(1 + eff_zins_depot, 1/12);
+
+                const rentenwert = (m, q, n, r) => (Math.abs(r) < 1e-8) ? m * n : m * ((Math.pow(q, n) - 1) / (q - 1));
+
+                let kum_ez = 0, k_flv_m = 0, k_t_brutto = 0, k_a_brutto = 0, b_t = 0, b_a = 0;
+                let beYear = null, beDepotYear = null;
+
+                einmalzahlungen.forEach(ez => {
+                    if (ez.jahr <= 0) {
+                        kum_ez += ez.betrag; b_t += ez.betrag; b_a += ez.betrag;
+                        const netto = Math.max(0, ez.betrag * (1 - (depotAgio/100)) - depotOrderEinmal);
+                        k_t_brutto += netto; k_a_brutto += netto;
+                    }
+                });
+
+                for (let j = 1; j <= laufzeit; j++) {
+                    const monate_bisher = j * 12;
+                    let b_s, b_e, a_m;
+                    if (j <= 5) { b_s = j - 1; b_e = j; a_m = 12; } 
+                    else { b_s = Math.floor((j - 1) / 5) * 5; b_e = b_s + 5; a_m = 60; }
+
+                    const calc_m_rate = (ks, ke, nMonate) => (ke - ks * Math.pow(q_ref, nMonate)) / rentenwert(1, q_ref, nMonate, ref_rendite);
+                    let m_100, m_500;
+                    if (basis_100_anker[b_e] !== undefined && basis_500_anker[b_e] !== undefined) {
+                        m_100 = calc_m_rate(basis_100_anker[b_s], basis_100_anker[b_e], a_m);
+                        m_500 = calc_m_rate(basis_500_anker[b_s], basis_500_anker[b_e], a_m);
+                    } else {
+                        m_100 = calc_m_rate(basis_100_anker[35], basis_100_anker[40], 60);
+                        m_500 = calc_m_rate(basis_500_anker[30], basis_500_anker[35], 60);
+                    }
+
+                    const m_akt = m_100 + (m_500 - m_100) * ((monatsbeitrag - 100) / 400.0);
+                    k_flv_m = k_flv_m * Math.pow(q_flv, 12) + rentenwert(m_akt, q_flv, 12, rendite_pa);
+
+                    let k_flv_ez_jahr = 0;
+                    einmalzahlungen.forEach(ez => {
+                        if (ez.jahr === j) {
+                            kum_ez += ez.betrag; b_t += ez.betrag; b_a += ez.betrag;
+                            const netto = Math.max(0, ez.betrag * (1 - (depotAgio/100)) - depotOrderEinmal);
+                            k_t_brutto += netto; k_a_brutto += netto;
+                        }
+                        if (j >= ez.jahr && ez.betrag > 0) {
+                            let t = j - ez.jahr + (ez.jahr > 0 ? 1 : 0);
+                            if (ez.jahr === 0) t = j;
+                            k_flv_ez_jahr += ez.betrag * (1 - (flvAgioEinmal/100)) * Math.pow(1 - (flvKostenEinmal/100), t) * Math.pow(1 + rendite_pa, t);
+                        }
+                    });
+
+                    for (let m = 1; m <= 12; m++) {
+                        b_t += monatsbeitrag; b_a += monatsbeitrag;
+                        const n_sp = Math.max(0, monatsbeitrag * (1 - (depotAgio/100)) - depotOrderSpar);
+                        k_t_brutto = (k_t_brutto + n_sp) * q_depot;
+                        k_a_brutto = (k_a_brutto + n_sp) * q_depot;
+                    }
+
+                    const th_e = k_t_brutto * (depotDiv/100);
+                    k_t_brutto -= th_e * (depotAge/100) * (depotKest/100);
+                    b_t += (th_e * (depotAge/100));
+                    k_a_brutto -= (k_a_brutto * (depotDiv/100)) * (depotKest/100);
+                    b_a += (k_a_brutto * (depotDiv/100)) * (1 - (depotKest/100));
+
+                    const flv_n = k_flv_m + k_flv_ez_jahr;
+                    const d_t_n = k_t_brutto - (Math.max(0, k_t_brutto - b_t) * (depotKest/100));
+                    const eingez_g = (monatsbeitrag * monate_bisher) + kum_ez;
+
+                    if (beYear === null && flv_n >= eingez_g) beYear = j;
+                    if (beDepotYear === null && flv_n >= d_t_n) beDepotYear = j;
+
+                    results.push({ jahr: j, eingezahlt: eingez_g, flv: Math.round(flv_n), depot_t: Math.round(d_t_n), depot_a: Math.round(k_a_brutto) });
+                }
+                return { data: results, breakEvenYear: beYear, breakEvenDepotYear: beDepotYear };
+            }, [monatsbeitrag, laufzeit, rendite, einmalzahlungen, flvAgioEinmal, flvKostenEinmal, depotAgio, depotOrderSpar, depotOrderEinmal, depotTer, depotKest, depotDiv, depotAge]);
+
+            const latest = data[data.length - 1];
+
+            return (
+                <div className="min-h-screen p-4 md:p-8">
+                    <div className="max-w-7xl mx-auto space-y-8">
+                        <header className="text-center space-y-3">
+                            <h1 className="text-4xl font-black text-slate-900">Versicherung vs. Depot</h1>
+                            <p className="text-slate-500 font-medium">Präziser Vergleich nach jasonschreiber.at Logik</p>
+                        </header>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            <aside className="lg:col-span-4 space-y-6">
+                                <div className="bg-white p-7 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-6">
+                                    <h3 className="font-black text-sm uppercase tracking-widest flex items-center gap-2"><BarChart3 size={18} /> Parameter</h3>
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase">Sparrate / Monat</label>
+                                            <input type="number" value={monatsbeitrag} onChange={e => setMonatsbeitrag(Number(e.target.value))} className="w-full p-3 bg-slate-50 rounded-2xl border border-slate-100 font-bold" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between"><label className="text-[10px] font-black text-slate-400 uppercase">Laufzeit</label><span className="text-sm font-black">{laufzeit} J.</span></div>
+                                            <input type="range" min="1" max="60" value={laufzeit} onChange={e => setLaufzeit(Number(e.target.value))} className="w-full accent-blue-600" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between"><label className="text-[10px] font-black text-slate-400 uppercase">Rendite</label><span className="text-sm font-black">{rendite}%</span></div>
+                                            <input type="range" min="0" max="15" step="0.1" value={rendite} onChange={e => setRendite(Number(e.target.value))} className="w-full accent-blue-600" />
+                                        </div>
+                                    </div>
+                                    
+                                    <button onClick={() => setShowExpert(!showExpert)} className="w-full flex justify-between items-center text-[10px] font-black text-blue-600 border-t pt-4 uppercase">
+                                        Expert Modus {showExpert ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
+                                    </button>
+                                    {showExpert && (
+                                        <div className="grid grid-cols-2 gap-2 pt-2 animate-fadeIn">
+                                            <label className="text-[9px] font-bold">Depot KeSt (%) <input type="number" value={depotKest} onChange={e => setDepotKest(Number(e.target.value))} className="w-full p-2 bg-slate-50 border rounded-lg"/></label>
+                                            <label className="text-[9px] font-bold">Depot Agio (%) <input type="number" value={depotAgio} onChange={e => setDepotAgio(Number(e.target.value))} className="w-full p-2 bg-slate-50 border rounded-lg"/></label>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="bg-white p-6 rounded-[2rem] border-l-4 border-blue-600 shadow-sm">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase mb-2 flex items-center gap-2"><Clock size={14}/> Break-Even</p>
+                                        <div className="flex justify-between text-sm font-bold"><span>vs. Depot:</span><span className="text-blue-600">Jahr {breakEvenDepotYear || 'N/A'}</span></div>
+                                    </div>
+                                    <div className="bg-slate-900 p-7 rounded-[2rem] text-white">
+                                        <p className="text-[10px] font-black uppercase opacity-60 mb-2">Netto Vorteil</p>
+                                        <p className="text-3xl font-black">{Math.abs(latest.flv - latest.depot_t).toLocaleString('de-DE')} €</p>
+                                        <p className="text-[10px] mt-2 opacity-50 uppercase">Durch {latest.flv > latest.depot_t ? 'Versicherung' : 'Depot'}</p>
+                                    </div>
+                                </div>
+                            </aside>
+
+                            <main className="lg:col-span-8 space-y-6">
+                                <div className="bg-white p-8 rounded-[3rem] shadow-xl border border-slate-100">
+                                    <div className="h-[450px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <ComposedChart data={data}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                <XAxis dataKey="jahr" axisLine={false} tickLine={false} tick={{fontSize: 11, fontWeight: 900, fill: '#cbd5e1'}} />
+                                                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11, fontWeight: 900, fill: '#cbd5e1'}} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+                                                <Tooltip contentStyle={{borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)'}} />
+                                                <Area type="monotone" dataKey="flv" name="Versicherung" stroke="#10b981" strokeWidth={4} fill="#10b98122" />
+                                                <Area type="monotone" dataKey="depot_t" name="Depot" stroke="#3b82f6" strokeWidth={4} fill="#3b82f622" />
+                                                <Line type="monotone" dataKey="eingezahlt" name="Einzahlung" stroke="#1e293b" strokeDasharray="5 5" dot={false} />
+                                            </ComposedChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-white rounded-[2rem] border overflow-hidden">
+                                    <table className="w-full text-left text-sm">
+                                        <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400">
+                                            <tr><th className="px-6 py-4">Jahr</th><th className="px-6 py-4">Einzahlung</th><th className="px-6 py-4 text-emerald-600">FLV</th><th className="px-6 py-4 text-blue-600">Depot</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            {data.filter((_, i) => (i + 1) % 5 === 0 || i === data.length - 1).map(row => (
+                                                <tr key={row.jahr} className="border-t">
+                                                    <td className="px-6 py-4 font-black">{row.jahr}</td>
+                                                    <td className="px-6 py-4">{row.eingezahlt.toLocaleString('de-DE')} €</td>
+                                                    <td className="px-6 py-4 font-black text-emerald-600">{row.flv.toLocaleString('de-DE')} €</td>
+                                                    <td className="px-6 py-4 font-black text-blue-600">{row.depot_t.toLocaleString('de-DE')} €</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </main>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
