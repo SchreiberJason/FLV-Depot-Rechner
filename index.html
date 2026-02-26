@@ -134,8 +134,7 @@ body{
 /* ══════════ PARAMS PANEL ══════════ */
 .params-panel{
   background:var(--ss); border:1px solid var(--brd); border-radius:14px;
-  overflow:hidden; position:sticky; top:16px;
-  max-height:calc(100vh - 80px); overflow-y:auto;
+  overflow:hidden; overflow-y:auto;
   box-shadow:0 4px 20px var(--sh);
 }
 
@@ -331,7 +330,7 @@ tbody tr:last-child td{border-bottom:none;}
     grid-template-columns:300px 1fr;
     gap:16px;
   }
-  .params-panel{position:sticky;top:16px;max-height:calc(100vh - 80px);overflow-y:auto;}
+  .params-panel{overflow-y:auto;}
   .g3{grid-template-columns:1fr 1fr;}
 }
 @media(min-width:600px) and (max-width:719px){
@@ -1385,12 +1384,35 @@ function calcFLV(mb,lj,rpa,ein,flv,dep){
 /* ══════════════════════════════════
    INIT
 ══════════════════════════════════ */
+/* ══════════════════════════════════
+   PANEL HEIGHT LIMITER
+══════════════════════════════════ */
+function updatePanelMaxHeight(){
+  if(window.innerWidth<720){
+    document.querySelectorAll('.params-panel').forEach(p=>{p.style.maxHeight='';});
+    return;
+  }
+  document.querySelectorAll('.calc-layout').forEach(layout=>{
+    const panel=layout.querySelector('.params-panel');
+    const rp=layout.querySelector('.rp');
+    if(!panel||!rp)return;
+    const h=rp.offsetHeight;
+    if(h>0)panel.style.maxHeight=h+'px';
+  });
+}
+if(typeof ResizeObserver!=='undefined'){
+  const _rpObs=new ResizeObserver(updatePanelMaxHeight);
+  document.querySelectorAll('.rp').forEach(el=>_rpObs.observe(el));
+}
+window.addEventListener('resize',updatePanelMaxHeight);
+
 window.addEventListener('DOMContentLoaded',()=>{
   berechneKurz();
   setMittelAnbieter();
   setLangAnbieter();
   buildLangLeg();
   syncDash();
+  setTimeout(updatePanelMaxHeight,0);
 });
 </script>
 </body>
