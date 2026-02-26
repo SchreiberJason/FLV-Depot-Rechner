@@ -58,7 +58,7 @@ body{
 .back-crumb b{color:var(--ts);font-weight:500;}
 
 /* ══════════ DASHBOARD ══════════ */
-.dash-wrap{max-width:1240px;margin:0 auto;padding:28px 16px 80px;}
+.dash-wrap{max-width:1240px;margin:0 auto;padding:28px 0 80px;}
 
 .dash-header{margin-bottom:28px;}
 .dash-eyebrow{
@@ -315,7 +315,7 @@ tbody tr:last-child td{border-bottom:none;}
 
 /* ---- Tablet 600–1023px ---- */
 @media(min-width:600px) and (max-width:1023px){
-  .dash-wrap{padding:24px 20px 60px;}
+  .dash-wrap{padding:24px 0 60px;}
   .pillar-grid{grid-template-columns:1fr 1fr;gap:12px;}
   .pillar-grid>.pillar-card:last-child{grid-column:1/-1;}
   .calc-layout{
@@ -342,7 +342,7 @@ tbody tr:last-child td{border-bottom:none;}
 @media(max-width:599px){
   body{font-size:14px;}
   .back-nav{padding:14px 14px 0;}
-  .dash-wrap{padding:20px 14px 56px;}
+  .dash-wrap{padding:20px 0 56px;}
   .dash-summary{grid-template-columns:1fr 1fr;gap:1px;}
   .dash-summary .ds-item:nth-child(3){grid-column:1/-1;border-top:1px solid var(--brd);}
   .ds-item{padding:14px 12px;}
@@ -369,7 +369,7 @@ tbody tr:last-child td{border-bottom:none;}
 
 /* ---- Large desktop ≥1024px ---- */
 @media(min-width:1024px){
-  .dash-wrap{padding:40px 28px 80px;}
+  .dash-wrap{padding:40px 0 80px;}
   .back-nav{padding:20px 28px 0;}
   .calc-layout{
     grid-template-columns:330px 1fr;
@@ -387,12 +387,6 @@ tbody tr:last-child td{border-bottom:none;}
 ══════════════════════════════════════ -->
 <div class="view active" id="view-dash">
 <div class="dash-wrap">
-
-  <div class="dash-header">
-    <div class="dash-eyebrow">📊 Finanzplanung</div>
-    <div class="dash-title">Dein 3-Säulen-<br>Konzept</div>
-    <div class="dash-sub">Kurzfristige Sicherheit, mittelfristige Ziele und langfristiger Vermögensaufbau — alles auf einen Blick.</div>
-  </div>
 
   <div class="dash-summary">
     <div class="ds-item">
