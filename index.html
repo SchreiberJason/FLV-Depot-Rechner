@@ -622,6 +622,12 @@ tbody tr:last-child td{border-bottom:none;}
         <div class="fu"><input type="number" id="m_order" value="0" min="0" step="0.10" oninput="berechneMittel()"><span class="ub">€ / Order</span></div></div>
       <div class="f"><label>KESt bei Entnahme</label>
         <div class="fu"><input type="number" id="m_kest" value="27.5" min="0" max="100" step="0.5" oninput="berechneMittel()"><span class="ub">%</span></div></div>
+      <div class="f"><label>Dividendenrendite p.a.</label>
+        <div class="fu"><input type="number" id="m_ddiv" value="2" min="0" step="0.1" oninput="berechneMittel()"><span class="ub">% p.a.</span></div></div>
+      <div class="f"><label>Anteil AgE</label>
+        <div class="fu"><input type="number" id="m_dage" value="100" min="0" max="100" step="1" oninput="berechneMittel()"><span class="ub">%</span></div></div>
+      <div class="f"><label>Spread An-/Verkauf</label>
+        <div class="fu"><input type="number" id="m_spread" value="0" min="0" step="0.01" oninput="berechneMittel()"><span class="ub">%</span></div></div>
     </div>
 
     <!-- Sonderzahlungen collapsible (Mittelfristig) -->
@@ -750,7 +756,8 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="f"><label>TER p.a.</label><div class="fu"><input type="number" id="l_dter" value="0.30" step="0.01" min="0"><span class="ub">% p.a.</span></div></div>
       <div class="f"><label>KESt</label><div class="fu"><input type="number" id="l_dkest" value="27.5" step="0.1" min="0" max="100"><span class="ub">%</span></div></div>
       <div class="f"><label>Dividendenrendite p.a.</label><div class="fu"><input type="number" id="l_ddiv" value="2" step="0.1" min="0"><span class="ub">% p.a.</span></div></div>
-      <div class="f"><label>Anteil AgE</label><div class="fu"><input type="number" id="l_dage" value="60" step="1" min="0" max="100"><span class="ub">%</span></div></div>
+      <div class="f"><label>Anteil AgE</label><div class="fu"><input type="number" id="l_dage" value="100" step="1" min="0" max="100"><span class="ub">%</span></div></div>
+      <div class="f"><label>Spread An-/Verkauf</label><div class="fu"><input type="number" id="l_dspread" value="0" min="0" step="0.01" oninput="berechneLang()"><span class="ub">%</span></div></div>
     </div>
     <div class="ps">
       <button class="btn-calc" onclick="berechneLang()">Berechnen</button>
@@ -847,35 +854,35 @@ function toggleColl(t){
 ══════════════════════════════════ */
 const DEPOTANBIETER={
   flatex:       {name:'Flatex AT',
-    etf:  {agio:0,  sp:0,    ez:5.90,  dg:0  },
-    fonds:{agio:0,  sp:0,    ez:5.90,  dg:0  }},
+    etf:  {agio:0,  sp:0,    ez:5.90,  dg:0,    spread:0.05},
+    fonds:{agio:0,  sp:0,    ez:5.90,  dg:0,    spread:0.05}},
   traderepublic:{name:'Trade Republic',
-    etf:  {agio:0,  sp:0,    ez:1.00,  dg:0  },
-    fonds:{agio:0,  sp:0,    ez:1.00,  dg:0  }},
+    etf:  {agio:0,  sp:0,    ez:1.00,  dg:0,    spread:0.05},
+    fonds:{agio:0,  sp:0,    ez:1.00,  dg:0,    spread:0.05}},
   dadat:        {name:'Dadat',
-    etf:  {agio:0,  sp:0,    ez:3.99,  dg:0  },
-    fonds:{agio:0,  sp:0,    ez:3.99,  dg:0  }},
+    etf:  {agio:0,  sp:0,    ez:3.99,  dg:0,    spread:0.05},
+    fonds:{agio:0,  sp:0,    ez:3.99,  dg:0,    spread:0.05}},
   easybank:     {name:'Easybank',
-    etf:  {agio:0,  sp:1.50, ez:9.90,  dg:0  },
-    fonds:{agio:2.5,sp:1.50, ez:9.90,  dg:0  }},
+    etf:  {agio:0,  sp:1.50, ez:9.90,  dg:0,    spread:0   },
+    fonds:{agio:2.5,sp:1.50, ez:9.90,  dg:0,    spread:0   }},
   bks:          {name:'BKS Bank (Klassik)',
-    etf:  {agio:1.6,sp:0,    ez:36.90, dg:0.28},
-    fonds:{agio:3.0,sp:0,    ez:15.00, dg:0.28}},
+    etf:  {agio:1.6,sp:0,    ez:36.90, dg:0.28, spread:0   },
+    fonds:{agio:3.0,sp:0,    ez:15.00, dg:0.28, spread:0   }},
   erste:        {name:'Erste Bank / George',
-    etf:  {agio:0,  sp:0,    ez:9.95,  dg:0  },
-    fonds:{agio:4.0,sp:0,    ez:9.95,  dg:0  }},
+    etf:  {agio:0,  sp:0,    ez:9.95,  dg:0,    spread:0   },
+    fonds:{agio:4.0,sp:0,    ez:9.95,  dg:0,    spread:0   }},
   raiffeisen:   {name:'Raiffeisen Wien',
-    etf:  {agio:0,  sp:3.95, ez:12.95, dg:0  },
-    fonds:{agio:5.0,sp:3.95, ez:12.95, dg:0  }},
+    etf:  {agio:0,  sp:3.95, ez:12.95, dg:0,    spread:0   },
+    fonds:{agio:5.0,sp:3.95, ez:12.95, dg:0,    spread:0   }},
   bankaustr:    {name:'Bank Austria',
-    etf:  {agio:0,  sp:5.00, ez:12.95, dg:0  },
-    fonds:{agio:5.0,sp:5.00, ez:12.95, dg:0  }},
+    etf:  {agio:0,  sp:5.00, ez:12.95, dg:0,    spread:0   },
+    fonds:{agio:5.0,sp:5.00, ez:12.95, dg:0,    spread:0   }},
   bawag:        {name:'BAWAG P.S.K.',
-    etf:  {agio:0,  sp:1.95, ez:10.95, dg:0  },
-    fonds:{agio:3.5,sp:1.95, ez:10.95, dg:0  }},
+    etf:  {agio:0,  sp:1.95, ez:10.95, dg:0,    spread:0   },
+    fonds:{agio:3.5,sp:1.95, ez:10.95, dg:0,    spread:0   }},
   plattform:    {name:'die Plattform',
-    etf:  {agio:0,  sp:0.95, ez:3.50,  dg:0.3},
-    fonds:{agio:3.5,sp:0.45, ez:6.00,  dg:0.2}},
+    etf:  {agio:0,  sp:0.95, ez:3.50,  dg:0.3,  spread:0   },
+    fonds:{agio:3.5,sp:0.45, ez:6.00,  dg:0.2,  spread:0   }},
   manuell:      {name:'Manuell',etf:null,fonds:null}
 };
 
@@ -920,6 +927,7 @@ function setLangAnbieter(){
   document.getElementById('l_dsp').value=cfg.sp;
   document.getElementById('l_dez').value=cfg.ez;
   document.getElementById('l_ddepotgeb').value=cfg.dg;
+  document.getElementById('l_dspread').value=cfg.spread||0;
   berechneLang();
 }
 function setMittelAnbieter(){
@@ -932,6 +940,7 @@ function setMittelAnbieter(){
   document.getElementById('m_agio').value=cfg.agio;
   document.getElementById('m_order').value=cfg.sp;
   document.getElementById('m_depotgeb').value=cfg.dg;
+  document.getElementById('m_spread').value=cfg.spread||0;
   berechneMittel();
 }
 
@@ -1069,9 +1078,19 @@ function berechneMittel(){
   const depotgeb=(+(document.getElementById('m_depotgeb')?.value||0))/100;
   const tzins =tagesAn?(+document.getElementById('m_tzins').value||0)/100:0;
   const tkest =tagesAn?(+document.getElementById('m_tkest').value||0)/100:0;
+  const div   =(+(document.getElementById('m_ddiv')?.value||0))/100;
+  const age   =(+(document.getElementById('m_dage')?.value||100))/100;
+  const spread=(+(document.getElementById('m_spread')?.value||0))/100;
   const qf=Math.pow(1+rendite-ter-depotgeb,1/12);
 
-  function calcF(r,j){let k=start,b=start;for(let m=1;m<=j*12;m++){const ns=Math.max(0,r*(1-agio)-order);k+=ns;b+=r;k*=qf;}return k-Math.max(0,k-b)*kest;}
+  function calcF(r,j){
+    let k=start,b=start;
+    for(let m=1;m<=j*12;m++){
+      const ns=Math.max(0,r*(1-agio)*(1-spread)-order);k+=ns;b+=r;k*=qf;
+      if(m%12===0){const te=k*div;const st=te*age*kest;k-=st;b+=te*age;}
+    }
+    const ks=k*(1-spread);return ks-Math.max(0,ks-b)*kest;
+  }
 
   let needed=null;
   if(isZ&&ziel>0){
@@ -1097,18 +1116,22 @@ function berechneMittel(){
   const rows=[];let kf=start,bf=start,kt=start,cumEz=0;
   // Jahr-0-Einmalzahlungen
   for(const ez of allMEinmal.filter(e=>e.j<=0)){
-    const ns=Math.max(0,ez.b*(1-agio)-order);kf+=ns;bf+=ez.b;kt+=ez.b;cumEz+=ez.b;
+    const ns=Math.max(0,ez.b*(1-agio)*(1-spread)-order);kf+=ns;bf+=ez.b;kt+=ez.b;cumEz+=ez.b;
   }
   for(let j=1;j<=jahre;j++){
     // Einmalzahlungen für dieses Jahr
     const ezJ=allMEinmal.filter(e=>e.j===j).reduce((s,e)=>s+e.b,0);
-    if(ezJ>0){const ns=Math.max(0,ezJ*(1-agio)-order);kf+=ns;bf+=ezJ;kt+=ezJ;cumEz+=ezJ;}
+    if(ezJ>0){const ns=Math.max(0,ezJ*(1-agio)*(1-spread)-order);kf+=ns;bf+=ezJ;kt+=ezJ;cumEz+=ezJ;}
     for(let m=1;m<=12;m++){
-      const ns=Math.max(0,rate*(1-agio)-order);kf+=ns;bf+=rate;kf*=qf;
+      const ns=Math.max(0,rate*(1-agio)*(1-spread)-order);kf+=ns;bf+=rate;kf*=qf;
       if(tagesAn){const z=kt*(tzins/12);kt+=rate+z-z*tkest;}
       else kt+=rate;
     }
-    rows.push({j,e:start+rate*j*12+cumEz,f:kf-Math.max(0,kf-bf)*kest,t:kt});
+    // Jährliche AgE-Besteuerung (Ausschüttungsgleicher Ertrag)
+    const te=kf*div;const st=te*age*kest;kf-=st;bf+=te*age;
+    // Verkauf-Spread auf hypothetischen Jahresendwert
+    const kfs=kf*(1-spread);
+    rows.push({j,e:start+rate*j*12+cumEz,f:kfs-Math.max(0,kfs-bf)*kest,t:kt});
   }
   const last=rows.at(-1);
   lastMFonds=last.f;
@@ -1277,7 +1300,7 @@ function berechneLang(){
     lj):[];
   const ein=[...einmal,...lRegArr].map(e=>({j:+e.j,b:+e.b||0}));
   const flv={ai:+document.getElementById('l_fagio').value/100,lk:+document.getElementById('l_fkosten').value/100};
-  const dep={ag:+document.getElementById('l_dagio').value/100,sp:+document.getElementById('l_dsp').value,ez:+document.getElementById('l_dez').value,ter:+document.getElementById('l_dter').value/100,ke:+document.getElementById('l_dkest').value/100,dv:+document.getElementById('l_ddiv').value/100,ae:+document.getElementById('l_dage').value/100,dg:+(document.getElementById('l_ddepotgeb')?.value||0)/100};
+  const dep={ag:+document.getElementById('l_dagio').value/100,sp:+document.getElementById('l_dsp').value,ez:+document.getElementById('l_dez').value,ter:+document.getElementById('l_dter').value/100,ke:+document.getElementById('l_dkest').value/100,dv:+document.getElementById('l_ddiv').value/100,ae:+document.getElementById('l_dage').value/100,dg:+(document.getElementById('l_ddepotgeb')?.value||0)/100,spread:+(document.getElementById('l_dspread')?.value||0)/100};
 
   const data=calcFLV(mb,lj,rpa,ein,flv,dep);
   const last=data.at(-1);
@@ -1333,7 +1356,8 @@ function calcFLV(mb,lj,rpa,ein,flv,dep){
   const qf=Math.pow(1+rpa,1/12),qd=Math.pow(1+rpa-dep.ter-(dep.dg||0),1/12);
   function rwf(m,n){return Math.abs(rpa)<1e-8?m*n:m*((Math.pow(qf,n)-1)/(qf-1));}
   const res=[];let kum=0,fm=0,kt=0,bt=0,ka=0,ba=0;
-  for(const a of ein)if(a.j<=0){kum+=a.b;bt+=a.b;ba+=a.b;const n=Math.max(0,a.b*(1-dep.ag)-dep.ez);kt+=n;ka+=n;}
+  const sp=dep.spread||0;
+  for(const a of ein)if(a.j<=0){kum+=a.b;bt+=a.b;ba+=a.b;const n=Math.max(0,a.b*(1-dep.ag)*(1-sp)-dep.ez);kt+=n;ka+=n;}
   for(let j=1;j<=lj;j++){
     let bs,be,am;
     if(j<=5){bs=j-1;be=j;am=12;}else{bs=Math.floor((j-1)/5)*5;be=bs+5;am=60;}
@@ -1345,13 +1369,14 @@ function calcFLV(mb,lj,rpa,ein,flv,dep){
     fm=fm*Math.pow(qf,12)+rwf(ma,12);
     let fe=0;
     for(const a of ein){
-      if(a.j===j){kum+=a.b;bt+=a.b;ba+=a.b;const n=Math.max(0,a.b*(1-dep.ag)-dep.ez);kt+=n;ka+=n;}
+      if(a.j===j){kum+=a.b;bt+=a.b;ba+=a.b;const n=Math.max(0,a.b*(1-dep.ag)*(1-sp)-dep.ez);kt+=n;ka+=n;}
       if(j>=a.j){const jsa=a.j>0?(j-a.j+1):j;fe+=a.b*(1-flv.ai)*Math.pow(1-flv.lk,jsa)*Math.pow(1+rpa,jsa);}
     }
-    for(let m=1;m<=12;m++){bt+=mb;ba+=mb;const ns=Math.max(0,mb*(1-dep.ag)-dep.sp);kt+=ns;ka+=ns;kt*=qd;ka*=qd;}
+    for(let m=1;m<=12;m++){bt+=mb;ba+=mb;const ns=Math.max(0,mb*(1-dep.ag)*(1-sp)-dep.sp);kt+=ns;ka+=ns;kt*=qd;ka*=qd;}
     const te=kt*dep.dv,st=te*dep.ae*dep.ke;kt-=st;bt+=te*dep.ae;
     const da=ka*dep.dv,sa=da*dep.ke;ka-=sa;ba+=da-sa;
-    const FN=fm+fe,TN=kt-Math.max(0,kt-bt)*dep.ke,AN=ka-Math.max(0,ka-ba)*dep.ke;
+    const kt_s=kt*(1-sp),ka_s=ka*(1-sp);
+    const FN=fm+fe,TN=kt_s-Math.max(0,kt_s-bt)*dep.ke,AN=ka_s-Math.max(0,ka_s-ba)*dep.ke;
     res.push({J:j,E:mb*(j*12)+kum,FN,TN,AN});
   }
   return res;
