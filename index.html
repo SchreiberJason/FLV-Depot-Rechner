@@ -54,7 +54,7 @@ body{
   transition:all .15s; -webkit-tap-highlight-color:transparent;
 }
 .back-btn:hover,.back-btn:active{border-color:var(--ac);color:var(--ac);background:var(--adim);}
-.back-crumb{font-size:12px;color:var(--tm);}
+.back-crumb{font-size:12px;color:var(--tm);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .back-crumb b{color:var(--ts);font-weight:500;}
 
 /* ══════════ DASHBOARD ══════════ */
@@ -184,12 +184,13 @@ input[type="number"],input[type="text"],select{
   /* font-size 16px prevents iOS zoom */
   font-size:16px;
   padding:9px 12px;outline:none;transition:border-color .15s;
-  -moz-appearance:textfield;appearance:none;
 }
+input[type="number"],input[type="text"]{-moz-appearance:textfield;appearance:none;}
 @media(min-width:640px){input[type="number"],input[type="text"],select{font-size:14px;}}
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;}
 input:focus,select:focus{border-color:var(--ac);background:var(--adim);}
+select{cursor:pointer;}
 select option{background:var(--ss);}
 
 .fu{display:flex;}
@@ -430,8 +431,8 @@ tbody tr:last-child td{border-bottom:none;}
         <div class="pc-desc">Für konkrete Lebensziele oder freies Ansparen. Mit Fondssparplan erreichst du mehr. Ziel oder freies Sparen wählbar.</div>
       </div>
       <div class="pc-metrics">
-        <div class="pc-metric"><div class="pcm-label">Fonds-Ergebnis</div><div class="pcm-value b" id="dm-fonds">—</div></div>
-        <div class="pc-metric"><div class="pcm-label">vs. Tagesgeld</div><div class="pcm-value b" id="dm-delta">—</div></div>
+        <div class="pc-metric"><div class="pcm-label">Endgewinn</div><div class="pcm-value b" id="dm-fonds">—</div></div>
+        <div class="pc-metric"><div class="pcm-label">Zinsgewinn</div><div class="pcm-value b" id="dm-delta">—</div></div>
       </div>
       <div class="pc-cta">Rechner öffnen <span class="cta-arr">→</span></div>
     </div>
@@ -443,8 +444,8 @@ tbody tr:last-child td{border-bottom:none;}
         <div class="pc-desc">FLV vs. Flatex Depot im Direktvergleich — mit allen Kosten, Steuern und Break-even-Analyse.</div>
       </div>
       <div class="pc-metrics">
-        <div class="pc-metric"><div class="pcm-label">FLV Netto</div><div class="pcm-value a" id="dl-flv">—</div></div>
-        <div class="pc-metric"><div class="pcm-label">Depot Thesaur.</div><div class="pcm-value a" id="dl-depot">—</div></div>
+        <div class="pc-metric"><div class="pcm-label">Endbetrag FLV</div><div class="pcm-value a" id="dl-flv">—</div></div>
+        <div class="pc-metric"><div class="pcm-label">FLV-Vorteil</div><div class="pcm-value a" id="dl-depot">—</div></div>
       </div>
       <div class="pc-cta">Rechner öffnen <span class="cta-arr">→</span></div>
     </div>
@@ -545,13 +546,13 @@ tbody tr:last-child td{border-bottom:none;}
     <div class="ps">
       <div class="sl">Modus wählen</div>
       <div class="mode-toggle">
-        <button class="mode-btn on" id="mb-ziel" onclick="setMode('ziel')">🎯 Zielsparen</button>
-        <button class="mode-btn" id="mb-frei" onclick="setMode('frei')">📈 Freies Sparen</button>
+        <button class="mode-btn on" id="mb-frei" onclick="setMode('frei')">📈 Freies Sparen</button>
+        <button class="mode-btn" id="mb-ziel" onclick="setMode('ziel')">🎯 Zielsparen</button>
       </div>
     </div>
 
     <!-- ── ZIELSPAREN ── -->
-    <div id="ziel-fields">
+    <div id="ziel-fields" class="hidden">
       <div class="ps">
         <div class="sl">Mein Sparziel</div>
         <div class="f"><label>Bezeichnung</label>
@@ -571,7 +572,7 @@ tbody tr:last-child td{border-bottom:none;}
     </div>
 
     <!-- ── FREIES SPAREN ── -->
-    <div id="frei-fields" class="hidden">
+    <div id="frei-fields">
       <div class="ps">
         <div class="sl">Sparplan</div>
         <div class="f"><label>Laufzeit</label>
@@ -583,19 +584,71 @@ tbody tr:last-child td{border-bottom:none;}
       </div>
     </div>
 
+    <!-- Depotanbieter collapsible -->
+    <div class="ct" onclick="toggleColl(this)" id="ct-m-depot">
+      <div class="sl">Depotanbieter</div><span class="ca">▼</span>
+    </div>
+    <div class="cb" id="cb-m-depot">
+      <div style="padding:14px 18px 10px">
+        <div class="mode-toggle" style="margin-bottom:10px">
+          <button class="mode-btn on" id="mpb-fonds" onclick="setMittelProdType('fonds')">📈 Investmentfonds</button>
+          <button class="mode-btn" id="mpb-etf" onclick="setMittelProdType('etf')">📊 ETF</button>
+        </div>
+        <select id="m_anbieter" onchange="setMittelAnbieter()">
+          <option value="manuell">Manuell</option>
+          <option value="flatex">Flatex AT</option>
+          <option value="traderepublic">Trade Republic</option>
+          <option value="dadat">Dadat</option>
+          <option value="easybank">Easybank</option>
+          <option value="bks">BKS Bank</option>
+          <option value="erste">Erste Bank / George</option>
+          <option value="raiffeisen">Raiffeisen Wien</option>
+          <option value="bankaustr">Bank Austria</option>
+          <option value="bawag">BAWAG P.S.K.</option>
+          <option value="plattform" selected>die Plattform</option>
+        </select>
+        <div class="ib hidden" id="m_anbieter_info" style="margin-top:10px"></div>
+      </div>
+    </div>
+
     <!-- Fonds params collapsible -->
     <div class="ct" onclick="toggleColl(this)" id="ct-fonds">
       <div class="sl">Fonds-Parameter</div><span class="ca">▼</span>
     </div>
     <div class="cb" id="cb-fonds">
+      <div class="f"><label>Agio</label>
+        <div class="fu"><input type="number" id="m_agio" value="0" min="0" step="0.1" oninput="berechneMittel()"><span class="ub">%</span></div></div>
+      <div class="f"><label>Depotgebühr p.a.</label>
+        <div class="fu"><input type="number" id="m_depotgeb" value="0" min="0" step="0.01" oninput="berechneMittel()"><span class="ub">% p.a.</span></div></div>
       <div class="f"><label>Rendite p.a.</label>
-        <div class="fu"><input type="number" id="m_rendite" value="6" min="0" max="30" step="0.5" oninput="berechneMittel()"><span class="ub">% p.a.</span></div></div>
+        <div class="fu"><input type="number" id="m_rendite" value="7" min="0" max="30" step="0.5" oninput="berechneMittel()"><span class="ub">% p.a.</span></div></div>
       <div class="f"><label>TER p.a.</label>
         <div class="fu"><input type="number" id="m_ter" value="0.3" min="0" step="0.01" oninput="berechneMittel()"><span class="ub">% p.a.</span></div></div>
       <div class="f"><label>Ordergebühr Sparplan</label>
-        <div class="fu"><input type="number" id="m_order" value="1.50" min="0" step="0.10" oninput="berechneMittel()"><span class="ub">€ / Order</span></div></div>
+        <div class="fu"><input type="number" id="m_order" value="0" min="0" step="0.10" oninput="berechneMittel()"><span class="ub">€ / Order</span></div></div>
       <div class="f"><label>KESt bei Entnahme</label>
         <div class="fu"><input type="number" id="m_kest" value="27.5" min="0" max="100" step="0.5" oninput="berechneMittel()"><span class="ub">%</span></div></div>
+    </div>
+
+    <!-- Sonderzahlungen collapsible (Mittelfristig) -->
+    <div class="ct" onclick="toggleColl(this)" id="ct-m-sonder">
+      <div class="sl">Sonderzahlungen</div><span class="ca">▼</span>
+    </div>
+    <div class="cb" id="cb-m-sonder">
+      <div class="opt-toggle" onclick="toggleMReg()" style="border-top:none">
+        <span class="opt-label">🔄 Regelmäßige Einmalzahlung</span>
+        <div class="opt-pill" id="mreg-pill"></div>
+      </div>
+      <div id="mreg-fields" class="hidden">
+        <div style="padding:4px 18px 14px">
+          <div class="f"><label>Betrag</label>
+            <div class="fu"><input type="number" id="m_reg_betrag" value="1000" min="0" step="100" oninput="mRegBetrag=+this.value;berechneMittel()"><span class="ub">€</span></div></div>
+          <div class="f"><label>Alle X Jahre</label>
+            <div class="fu"><input type="number" id="m_reg_int" value="1" min="1" step="1" oninput="mRegIntervall=+this.value;berechneMittel()"><span class="ub">J.</span></div></div>
+          <div class="f"><label>Ab Jahr</label>
+            <div class="fu"><input type="number" id="m_reg_ab" value="1" min="0" step="1" oninput="mRegAbJahr=+this.value;berechneMittel()"><span class="ub">J.</span></div></div>
+        </div>
+      </div>
     </div>
 
     <!-- Tagesgeld OPTIONAL toggle -->
@@ -640,27 +693,64 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="f"><label>Laufzeit</label>
         <div class="fu"><input type="number" id="l_lj" value="40" min="1" max="50"><span class="ub">Jahre</span></div></div>
       <div class="f"><label>Marktrendite p.a.</label>
-        <div class="fu"><input type="number" id="l_rpa" value="6" min="0" max="30" step="0.1"><span class="ub">% p.a.</span></div></div>
+        <div class="fu"><input type="number" id="l_rpa" value="7" min="0" max="30" step="0.1"><span class="ub">% p.a.</span></div></div>
     </div>
     <div class="ps">
       <div class="sl">Sonderzahlungen</div>
       <div id="einmal-c"></div>
       <button class="btn-add" onclick="addEinmal()">+ Einmalzahlung</button>
+      <div class="opt-toggle" onclick="toggleLReg()" style="margin-top:12px;border-radius:10px">
+        <span class="opt-label">🔄 Regelmäßige Einmalzahlung</span>
+        <div class="opt-pill" id="lreg-pill"></div>
+      </div>
+      <div id="lreg-fields" class="hidden">
+        <div style="padding:4px 0 4px">
+          <div class="f"><label>Betrag</label>
+            <div class="fu"><input type="number" id="l_reg_betrag" value="1000" min="0" step="100" oninput="lRegBetrag=+this.value;berechneLang()"><span class="ub">€</span></div></div>
+          <div class="f"><label>Alle X Jahre</label>
+            <div class="fu"><input type="number" id="l_reg_int" value="1" min="1" step="1" oninput="lRegIntervall=+this.value;berechneLang()"><span class="ub">J.</span></div></div>
+          <div class="f"><label>Ab Jahr</label>
+            <div class="fu"><input type="number" id="l_reg_ab" value="1" min="0" step="1" oninput="lRegAbJahr=+this.value;berechneLang()"><span class="ub">J.</span></div></div>
+        </div>
+      </div>
     </div>
-    <div class="ct" onclick="toggleColl(this)" id="ct-flv">
-      <div class="sl">FLV — Kosten</div><span class="ca">▼</span>
+    <!-- FLV-Kosten: fixe Werte, ausgeblendet -->
+    <div class="hidden">
+      <input type="number" id="l_fagio" value="7.65">
+      <input type="number" id="l_fkosten" value="0.61">
     </div>
-    <div class="cb" id="cb-flv">
-      <div class="f"><label>Agio Einmaleinlagen</label>
-        <div class="fu"><input type="number" id="l_fagio" value="7.65" step="0.01" min="0"><span class="ub">%</span></div></div>
-      <div class="f"><label>Laufende Kosten p.a.</label>
-        <div class="fu"><input type="number" id="l_fkosten" value="0.61" step="0.01" min="0"><span class="ub">% p.a.</span></div></div>
+    <!-- Depotanbieter collapsible -->
+    <div class="ct" onclick="toggleColl(this)" id="ct-l-depot">
+      <div class="sl">Depotanbieter</div><span class="ca">▼</span>
+    </div>
+    <div class="cb" id="cb-l-depot">
+      <div style="padding:14px 18px 10px">
+        <div class="mode-toggle" style="margin-bottom:10px">
+          <button class="mode-btn on" id="lpb-fonds" onclick="setLangProdType('fonds')">📈 Investmentfonds</button>
+          <button class="mode-btn" id="lpb-etf" onclick="setLangProdType('etf')">📊 ETF</button>
+        </div>
+        <select id="l_anbieter" onchange="setLangAnbieter()">
+          <option value="manuell">Manuell</option>
+          <option value="flatex">Flatex AT</option>
+          <option value="traderepublic">Trade Republic</option>
+          <option value="dadat">Dadat</option>
+          <option value="easybank">Easybank</option>
+          <option value="bks">BKS Bank</option>
+          <option value="erste">Erste Bank / George</option>
+          <option value="raiffeisen">Raiffeisen Wien</option>
+          <option value="bankaustr">Bank Austria</option>
+          <option value="bawag">BAWAG P.S.K.</option>
+          <option value="plattform" selected>die Plattform</option>
+        </select>
+        <div class="ib hidden" id="l_anbieter_info" style="margin-top:10px"></div>
+      </div>
     </div>
     <div class="ct" onclick="toggleColl(this)" id="ct-depot">
-      <div class="sl">Flatex Depot — Kosten</div><span class="ca">▼</span>
+      <div class="sl">Depot — Kosten</div><span class="ca">▼</span>
     </div>
     <div class="cb" id="cb-depot">
       <div class="f"><label>Agio Depot</label><div class="fu"><input type="number" id="l_dagio" value="0" step="0.1" min="0"><span class="ub">%</span></div></div>
+      <div class="f"><label>Depotgebühr p.a.</label><div class="fu"><input type="number" id="l_ddepotgeb" value="0" step="0.01" min="0" oninput="berechneLang()"><span class="ub">% p.a.</span></div></div>
       <div class="f"><label>Sparplan-Order</label><div class="fu"><input type="number" id="l_dsp" value="1.50" step="0.10" min="0"><span class="ub">€</span></div></div>
       <div class="f"><label>Einzelkauf-Order</label><div class="fu"><input type="number" id="l_dez" value="5.90" step="0.10" min="0"><span class="ub">€</span></div></div>
       <div class="f"><label>TER p.a.</label><div class="fu"><input type="number" id="l_dter" value="0.30" step="0.01" min="0"><span class="ub">% p.a.</span></div></div>
@@ -733,23 +823,20 @@ function syncDash(){
     document.getElementById('dk-ziel').textContent=kZ;
     document.getElementById('dk-dauer').textContent=kD||'—';
   }
-  // Mittel: read from dynamic result panel
-  const mEl=document.querySelector('#m_results .mv.blue, #m_results .mv.ac');
-  const dEl=document.querySelector('#m_results .mv.pos, #m_results .mv.neg');
-  if(mEl&&mEl.textContent!=='—'){
-    const v=mEl.textContent;
+  // Mittel
+  if(lastMFonds>0){
+    const v=eur(lastMFonds);
+    const vz=(lastMZins>=0?'+':'')+eur(lastMZins);
     document.getElementById('dash-m').textContent=v;
     document.getElementById('dash-m').style.color='var(--tp)';
     document.getElementById('dm-fonds').textContent=v;
-    document.getElementById('dm-delta').textContent=dEl?.textContent||'—';
+    document.getElementById('dm-delta').textContent=vz;
   }
-  const lF=document.getElementById('l_flv')?.textContent;
-  const lT=document.getElementById('l_thes')?.textContent;
-  if(lF&&lF!=='—'){
-    document.getElementById('dash-l').textContent=lF;
+  if(lastLFlv>0){
+    document.getElementById('dash-l').textContent=eur(lastLFlv);
     document.getElementById('dash-l').style.color='var(--tp)';
-    document.getElementById('dl-flv').textContent=lF;
-    document.getElementById('dl-depot').textContent=lT||'—';
+    document.getElementById('dl-flv').textContent=eur(lastLFlv);
+    document.getElementById('dl-depot').textContent=(lastLDelta>=0?'+':'')+eur(lastLDelta);
   }
 }
 
@@ -762,10 +849,106 @@ function toggleColl(t){
 }
 
 /* ══════════════════════════════════
+   DEPOTANBIETER
+══════════════════════════════════ */
+const DEPOTANBIETER={
+  flatex:       {name:'Flatex AT',
+    etf:  {agio:0,  sp:0,    ez:5.90,  dg:0  },
+    fonds:{agio:0,  sp:0,    ez:5.90,  dg:0  }},
+  traderepublic:{name:'Trade Republic',
+    etf:  {agio:0,  sp:0,    ez:1.00,  dg:0  },
+    fonds:{agio:0,  sp:0,    ez:1.00,  dg:0  }},
+  dadat:        {name:'Dadat',
+    etf:  {agio:0,  sp:0,    ez:3.99,  dg:0  },
+    fonds:{agio:0,  sp:0,    ez:3.99,  dg:0  }},
+  easybank:     {name:'Easybank',
+    etf:  {agio:0,  sp:1.50, ez:9.90,  dg:0  },
+    fonds:{agio:2.5,sp:1.50, ez:9.90,  dg:0  }},
+  bks:          {name:'BKS Bank (Klassik)',
+    etf:  {agio:1.6,sp:0,    ez:36.90, dg:0.28},
+    fonds:{agio:3.0,sp:0,    ez:15.00, dg:0.28}},
+  erste:        {name:'Erste Bank / George',
+    etf:  {agio:0,  sp:0,    ez:9.95,  dg:0  },
+    fonds:{agio:4.0,sp:0,    ez:9.95,  dg:0  }},
+  raiffeisen:   {name:'Raiffeisen Wien',
+    etf:  {agio:0,  sp:3.95, ez:12.95, dg:0  },
+    fonds:{agio:5.0,sp:3.95, ez:12.95, dg:0  }},
+  bankaustr:    {name:'Bank Austria',
+    etf:  {agio:0,  sp:5.00, ez:12.95, dg:0  },
+    fonds:{agio:5.0,sp:5.00, ez:12.95, dg:0  }},
+  bawag:        {name:'BAWAG P.S.K.',
+    etf:  {agio:0,  sp:1.95, ez:10.95, dg:0  },
+    fonds:{agio:3.5,sp:1.95, ez:10.95, dg:0  }},
+  plattform:    {name:'die Plattform',
+    etf:  {agio:0,  sp:0.95, ez:3.50,  dg:0.3},
+    fonds:{agio:3.5,sp:0.45, ez:6.00,  dg:0.2}},
+  manuell:      {name:'Manuell',etf:null,fonds:null}
+};
+
+const ANBIETER_NOTES={
+  bks:'⚠️ <b>Klassik-Depot:</b> Zusätzlich €2,80/Monat Servicegebühr (€33,60 p.a.) — nicht modelliert. ETF-Sparplan-Gebühr (1,60%) als Agio dargestellt.',
+  plattform:'ℹ️ <b>die Plattform:</b> Zusätzlich +0,15% pro Order-Transaktion sowie €5,30/Quartal Verrechnungskontogebühr — nicht modelliert.'
+};
+
+function showAnbieterNote(infoId,key){
+  const el=document.getElementById(infoId);
+  if(!el)return;
+  const note=ANBIETER_NOTES[key];
+  if(note){el.innerHTML=note;el.classList.remove('hidden');}
+  else el.classList.add('hidden');
+}
+
+let lProdType='fonds';
+let mProdType='fonds';
+
+function setLangProdType(t){
+  lProdType=t;
+  document.getElementById('lpb-etf').classList.toggle('on',t==='etf');
+  document.getElementById('lpb-fonds').classList.toggle('on',t==='fonds');
+  if(document.getElementById('l_anbieter').value!=='manuell')setLangAnbieter();
+  else berechneLang();
+}
+function setMittelProdType(t){
+  mProdType=t;
+  document.getElementById('mpb-etf').classList.toggle('on',t==='etf');
+  document.getElementById('mpb-fonds').classList.toggle('on',t==='fonds');
+  if(document.getElementById('m_anbieter').value!=='manuell')setMittelAnbieter();
+  else berechneMittel();
+}
+function setLangAnbieter(){
+  const key=document.getElementById('l_anbieter').value;
+  showAnbieterNote('l_anbieter_info',key);
+  const p=DEPOTANBIETER[key];
+  if(!p)return;
+  const cfg=p[lProdType];
+  if(!cfg)return;
+  document.getElementById('l_dagio').value=cfg.agio;
+  document.getElementById('l_dsp').value=cfg.sp;
+  document.getElementById('l_dez').value=cfg.ez;
+  document.getElementById('l_ddepotgeb').value=cfg.dg;
+  berechneLang();
+}
+function setMittelAnbieter(){
+  const key=document.getElementById('m_anbieter').value;
+  showAnbieterNote('m_anbieter_info',key);
+  const p=DEPOTANBIETER[key];
+  if(!p)return;
+  const cfg=p[mProdType];
+  if(!cfg)return;
+  document.getElementById('m_agio').value=cfg.agio;
+  document.getElementById('m_order').value=cfg.sp;
+  document.getElementById('m_depotgeb').value=cfg.dg;
+  berechneMittel();
+}
+
+/* ══════════════════════════════════
    MITTELFRISTIG MODE + TAGESGELD
 ══════════════════════════════════ */
-let mMode='ziel';
+let mMode='frei';
+let mRegAn=false,mRegBetrag=1000,mRegIntervall=1,mRegAbJahr=1;
 let tagesAn=false;
+let lastMFonds=0,lastMZins=0;
+let lastLFlv=0,lastLDelta=0;
 
 function setMode(m){
   mMode=m;
@@ -888,11 +1071,13 @@ function berechneMittel(){
   const ter   =(+document.getElementById('m_ter').value||0)/100;
   const order =+document.getElementById('m_order').value||0;
   const kest  =(+document.getElementById('m_kest').value||0)/100;
+  const agio  =(+(document.getElementById('m_agio')?.value||0))/100;
+  const depotgeb=(+(document.getElementById('m_depotgeb')?.value||0))/100;
   const tzins =tagesAn?(+document.getElementById('m_tzins').value||0)/100:0;
   const tkest =tagesAn?(+document.getElementById('m_tkest').value||0)/100:0;
-  const qf=Math.pow(1+rendite-ter,1/12);
+  const qf=Math.pow(1+rendite-ter-depotgeb,1/12);
 
-  function calcF(r,j){let k=start,b=start;for(let m=1;m<=j*12;m++){const ns=Math.max(0,r-order);k+=ns;b+=r;k*=qf;}return k-Math.max(0,k-b)*kest;}
+  function calcF(r,j){let k=start,b=start;for(let m=1;m<=j*12;m++){const ns=Math.max(0,r*(1-agio)-order);k+=ns;b+=r;k*=qf;}return k-Math.max(0,k-b)*kest;}
 
   let needed=null;
   if(isZ&&ziel>0){
@@ -910,16 +1095,30 @@ function berechneMittel(){
     }
   }
 
-  const rows=[];let kf=start,bf=start,kt=start;
+  const allMEinmal=mRegAn?genRegEinmal(
+    +(document.getElementById('m_reg_betrag')?.value||0),
+    +(document.getElementById('m_reg_int')?.value||1),
+    +(document.getElementById('m_reg_ab')?.value||1),
+    jahre):[];
+  const rows=[];let kf=start,bf=start,kt=start,cumEz=0;
+  // Jahr-0-Einmalzahlungen
+  for(const ez of allMEinmal.filter(e=>e.j<=0)){
+    const ns=Math.max(0,ez.b*(1-agio)-order);kf+=ns;bf+=ez.b;kt+=ez.b;cumEz+=ez.b;
+  }
   for(let j=1;j<=jahre;j++){
+    // Einmalzahlungen für dieses Jahr
+    const ezJ=allMEinmal.filter(e=>e.j===j).reduce((s,e)=>s+e.b,0);
+    if(ezJ>0){const ns=Math.max(0,ezJ*(1-agio)-order);kf+=ns;bf+=ezJ;kt+=ezJ;cumEz+=ezJ;}
     for(let m=1;m<=12;m++){
-      const ns=Math.max(0,rate-order);kf+=ns;bf+=rate;kf*=qf;
+      const ns=Math.max(0,rate*(1-agio)-order);kf+=ns;bf+=rate;kf*=qf;
       if(tagesAn){const z=kt*(tzins/12);kt+=rate+z-z*tkest;}
       else kt+=rate;
     }
-    rows.push({j,e:start+rate*j*12,f:kf-Math.max(0,kf-bf)*kest,t:kt});
+    rows.push({j,e:start+rate*j*12+cumEz,f:kf-Math.max(0,kf-bf)*kest,t:kt});
   }
   const last=rows.at(-1);
+  lastMFonds=last.f;
+  lastMZins=last.f-last.e;
 
   // Build result HTML
   const panel=document.getElementById('m_results');
@@ -1018,10 +1217,28 @@ function berechneMittel(){
 /* ══════════════════════════════════
    LANGFRISTIG
 ══════════════════════════════════ */
+let lRegAn=false,lRegBetrag=1000,lRegIntervall=1,lRegAbJahr=1;
 let lChart=null;
 let lVis={flv:true,thes:true,ausch:true,einz:true};
-let einmal=[{j:0,b:0},{j:1,b:0},{j:2,b:0}];
+let einmal=[{j:0,b:2000},{j:5,b:5000},{j:7,b:5000}];
 
+function genRegEinmal(betrag,intervall,abJahr,laufzeit){
+  const r=[];if(betrag<=0||intervall<=0)return r;
+  for(let j=abJahr;j<=laufzeit;j+=intervall)r.push({j,b:betrag});
+  return r;
+}
+function toggleMReg(){
+  mRegAn=!mRegAn;
+  document.getElementById('mreg-pill').classList.toggle('on',mRegAn);
+  document.getElementById('mreg-fields').classList.toggle('hidden',!mRegAn);
+  berechneMittel();
+}
+function toggleLReg(){
+  lRegAn=!lRegAn;
+  document.getElementById('lreg-pill').classList.toggle('on',lRegAn);
+  document.getElementById('lreg-fields').classList.toggle('hidden',!lRegAn);
+  berechneLang();
+}
 function renderEinmal(){
   const c=document.getElementById('einmal-c');c.innerHTML='';
   einmal.forEach((e,i)=>{
@@ -1059,12 +1276,19 @@ function berechneLang(){
   const mb=+document.getElementById('l_mb').value;
   const lj=+document.getElementById('l_lj').value;
   const rpa=+document.getElementById('l_rpa').value/100;
-  const ein=einmal.map(e=>({j:+e.j,b:+e.b||0}));
+  const lRegArr=lRegAn?genRegEinmal(
+    +(document.getElementById('l_reg_betrag')?.value||0),
+    +(document.getElementById('l_reg_int')?.value||1),
+    +(document.getElementById('l_reg_ab')?.value||1),
+    lj):[];
+  const ein=[...einmal,...lRegArr].map(e=>({j:+e.j,b:+e.b||0}));
   const flv={ai:+document.getElementById('l_fagio').value/100,lk:+document.getElementById('l_fkosten').value/100};
-  const dep={ag:+document.getElementById('l_dagio').value/100,sp:+document.getElementById('l_dsp').value,ez:+document.getElementById('l_dez').value,ter:+document.getElementById('l_dter').value/100,ke:+document.getElementById('l_dkest').value/100,dv:+document.getElementById('l_ddiv').value/100,ae:+document.getElementById('l_dage').value/100};
+  const dep={ag:+document.getElementById('l_dagio').value/100,sp:+document.getElementById('l_dsp').value,ez:+document.getElementById('l_dez').value,ter:+document.getElementById('l_dter').value/100,ke:+document.getElementById('l_dkest').value/100,dv:+document.getElementById('l_ddiv').value/100,ae:+document.getElementById('l_dage').value/100,dg:+(document.getElementById('l_ddepotgeb')?.value||0)/100};
 
   const data=calcFLV(mb,lj,rpa,ein,flv,dep);
   const last=data.at(-1);
+  lastLFlv=last.FN;
+  lastLDelta=last.FN-Math.max(last.TN,last.AN);
 
   if(lChart)lChart.destroy();
   const t=tc();
@@ -1112,7 +1336,7 @@ function calcFLV(mb,lj,rpa,ein,flv,dep){
   function rwr(m,n){return Math.abs(ref)<1e-8?m*n:m*((Math.pow(qr,n)-1)/(qr-1));}
   const b1={0:0,1:618.06,2:1270.27,3:1961.42,4:2693.89,5:3470.10,10:11062.82,15:21209.92,20:34766.96,25:52875.92,30:77060,35:109352.45,40:152464.60};
   const b5={0:0,1:3204.64,2:6597.50,3:10192.99,4:14003.30,5:18041.10,10:56149.33,15:108933.69,20:178401.14,25:271203.42,30:395157.38,35:560699.45};
-  const qf=Math.pow(1+rpa,1/12),qd=Math.pow(1+rpa-dep.ter,1/12);
+  const qf=Math.pow(1+rpa,1/12),qd=Math.pow(1+rpa-dep.ter-(dep.dg||0),1/12);
   function rwf(m,n){return Math.abs(rpa)<1e-8?m*n:m*((Math.pow(qf,n)-1)/(qf-1));}
   const res=[];let kum=0,fm=0,kt=0,bt=0,ka=0,ba=0;
   for(const a of ein)if(a.j<=0){kum+=a.b;bt+=a.b;ba+=a.b;const n=Math.max(0,a.b*(1-dep.ag)-dep.ez);kt+=n;ka+=n;}
@@ -1144,8 +1368,8 @@ function calcFLV(mb,lj,rpa,ein,flv,dep){
 ══════════════════════════════════ */
 window.addEventListener('DOMContentLoaded',()=>{
   berechneKurz();
-  berechneMittel();
-  berechneLang();
+  setMittelAnbieter();
+  setLangAnbieter();
   buildLangLeg();
   syncDash();
 });
